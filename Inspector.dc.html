@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./db-config.js"></script>
+<script src="./guard.js"></script>
+<script src="./db-client.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#fbfaf7;color:#16191d}*{box-sizing:border-box}button{font:inherit}a{color:oklch(0.5 0.14 252)}a:hover{color:oklch(0.42 0.14 252)}</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.45;max-width:1100px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:#5a6069">LDS SHAKER SELECTOR</span><h1 style="margin:0;font-size:26px">Inspector</h1></div>
+    <button onClick="{{ rescan }}" style="border:0;background:#16191d;color:#fff;border-radius:10px;padding:10px 16px;min-height:44px;cursor:pointer;font-weight:600">{{ scanLabel }}</button>
+  </div>
+  <div style="background:#fff;border:1px solid #e4e2dd;border-radius:12px;padding:14px 16px;font-size:13px;color:#3b4047;text-wrap:pretty">
+    <strong>How to use this page.</strong> Each card is one rule from CLAUDE.md. Green means clean. Red findings need action; grey notes (comments, identifiers) do not. Every finding says what it means, where to fix it, and how — the <em>Copy fix request</em> button copies a request you can paste to Claude or email a developer. Run this before every publish.
+  </div>
+  <div style="font-size:13px;color:#5a6069">{{ summary }}</div>
+  <sc-for list="{{ cards }}" as="c" hint-placeholder-count="5">
+    <div style="background:#fff;border:1px solid #e4e2dd;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-size:16px">{{ c.title }}</span><span style="font-size:13px;color:#5a6069">{{ c.intro }}</span></div>
+        <span style="padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:{{ c.bg }};color:{{ c.fg }}">{{ c.status }}</span>
+      </div>
+      <sc-for list="{{ c.groups }}" as="g" hint-placeholder-count="0">
+        <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid #efede9;padding-top:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3b4047">{{ g.file }} · {{ g.count }}</div>
+          <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="0">
+            <div style="display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:10px;background:{{ it.bg }};border-left:3px solid {{ it.bd }}">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#16191d;white-space:pre-wrap;word-break:break-all">line {{ it.line }}: {{ it.text }}</div>
+              <div style="font-size:13px"><strong>What this means:</strong> {{ it.what }}</div>
+              <div style="font-size:13px"><strong>Where to fix it:</strong> {{ it.where }}</div>
+              <div style="font-size:13px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span><strong>How:</strong> {{ it.how }}</span><button data-req="{{ it.req }}" onClick="{{ copyReq }}" style="border:1px solid #d8d5cf;background:#fff;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">Copy fix request</button></div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </sc-for>
+  <div style="font-size:12px;color:#5a6069">{{ copyMsg }}</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { scanning: false, results: null, copyMsg: '', health: [] };
+  componentDidMount() { window.DB.configure({ mode: 'public' }); window.DB.ready().catch(() => {}).then(() => this.scan()); }
+  async scan() {
+    this.setState({ scanning: true });
+    const cfg = window.DB_CONFIG || {}; const db = window.DB.data() || {}; const ge = db.generalExtras || {};
+    const appFiles = ge.appFiles || cfg.appFiles || [], publicFiles = ge.publicFiles || cfg.publicFiles || [];
+    const files = {}; const health = [];
+    for (const f of appFiles) { try { const r = await fetch(new URL(f, document.baseURI)); if (!r.ok) throw new Error('HTTP ' + r.status); files[f] = await r.text(); if (/\.js$/.test(f)) { try { new Function(files[f]); } catch (e) { health.push({ file: f, line: 0, text: e.message, rule: 'Code health', what: 'This script does not compile; every page that loads it is broken.', how: 'Fix the syntax error at the reported position.' }); } } } catch (e) { health.push({ file: f, line: 0, text: e.message, rule: 'Code health', what: 'A registered file could not be loaded.', how: 'Restore the file or remove it from generalExtras.appFiles.' }); } }
+    // load each app in a hidden frame and catch console errors
+    for (const f of appFiles.filter(x => /\.dc\.html$/.test(x) && !/Inspector/.test(x))) {
+      const errs = await new Promise(res => { const fr = document.createElement('iframe'); fr.style.cssText = 'position:fixed;width:900px;height:700px;left:-2000px;top:0'; fr.src = new URL(f, document.baseURI).href; const out = []; const done = () => { try { fr.remove(); } catch (e) {} res(out); }; fr.onload = () => { try { fr.contentWindow.addEventListener('error', e => out.push(e.message)); fr.contentWindow.console.error = (...a) => out.push(a.map(String).join(' ')); } catch (e) {} setTimeout(done, 2500); }; setTimeout(done, 8000); document.body.appendChild(fr); });
+      errs.slice(0, 5).forEach(m => health.push({ file: f, line: 0, text: m, rule: 'Code health', what: 'The page logged a runtime error while loading.', how: 'Open the page, reproduce, fix the reported error.' }));
+    }
+    // projection parity: browser copy vs server copy
+    const parity = [];
+    try { const a = (files['public-projection.js'] || '').match(/function project[\s\S]*?\n  \}/)[0].replace(/\s+/g, ' '); const b = (await (await fetch(new URL('server/Public.gs', document.baseURI))).text()).match(/function project[\s\S]*?\n\}/)[0].replace(/\s+/g, ' '); if (a !== b) parity.push({ file: 'server/Public.gs', line: 1, text: 'project() differs from public-projection.js', rule: 'Rule 9', what: 'The browser and the server disagree on what the public audience may download.', how: 'Copy project() from public-projection.js into server/Public.gs verbatim, then redeploy (New version).' }); } catch (e) {}
+    const G = window.Guard;
+    const results = [
+      { title: 'Rule 1 — No hardcoded data', intro: 'Files hold structure only; every value a user reads comes from the database.', items: G.scanHardcoded(files, db).filter(x => x.rule === 'Rule 1') },
+      { title: 'Rule 9 — One source', intro: 'Every page reads the server document through db-client; storage is a cache under "lds." only.', items: G.scanHardcoded(files, db).filter(x => x.rule === 'Rule 9').concat(parity) },
+      { title: 'Rule 2 — The public surface is public', intro: 'No internal vocabulary in files reachable from the public URL.', items: G.scanPublicWords(files, publicFiles) },
+      { title: 'Rule 7 — Notes are memos', intro: 'No code path decides anything from a note.', items: G.scanNotes(files) },
+      { title: 'Rule 8 — Stable ids', intro: 'Every database row has a unique id.', items: G.scanIds(db) },
+      { title: 'Data soundness', intro: 'Library rows the sizing engine cannot use safely.', items: G.scanSoundness(db) },
+      { title: 'Code health', intro: 'Every registered file loads and compiles; each app opens without console errors.', items: health, scanned: appFiles.length }
+    ];
+    this.setState({ scanning: false, results, filesScanned: Object.keys(files).length });
+  }
+  renderVals() {
+    const S = this.state, R = S.results || [];
+    const cards = R.map(c => {
+      const viol = c.items.filter(i => i.severity !== 'note'), notes = c.items.filter(i => i.severity === 'note');
+      const byFile = {}; c.items.forEach(i => { (byFile[i.file] = byFile[i.file] || []).push(i); });
+      const groups = Object.keys(byFile).map(f => ({ file: f, count: `${byFile[f].length} finding(s)`, items: byFile[f].slice(0, 40).map(i => {
+        const isData = /^(systems|headExpanders|kb|links|feedback|releases)$/.test(i.file);
+        const where = isData ? `Workbench → ${i.file} → row ${i.line}` : `${i.file}, line ${i.line} — look for: ${i.text.slice(0, 60)}`;
+        const req = isData ? `In the LDS Shaker Selector database, table ${i.file}, row ${i.line}: ${i.what} Fix: ${i.how}` : `In \`${i.file}\` line ${i.line}, change \`${i.text.slice(0, 120)}\` — ${i.what} (${i.rule}). Fix: ${i.how}`;
+        const note = i.severity === 'note';
+        return { line: i.line, text: i.text, what: i.what, where, how: i.how, req, bg: note ? '#f4f3ef' : 'oklch(0.97 0.03 27)', bd: note ? '#c9c6bf' : 'oklch(0.53 0.17 27)' };
+      }) }));
+      return { title: c.title, intro: c.intro, groups, status: viol.length ? `${viol.length} violation(s)${notes.length ? ` · ${notes.length} note(s)` : ''}` : `clean · ${c.scanned ?? S.filesScanned ?? 0} scanned${notes.length ? ` · ${notes.length} note(s)` : ''}`, bg: viol.length ? 'oklch(0.95 0.04 27)' : 'oklch(0.95 0.04 155)', fg: viol.length ? 'oklch(0.45 0.15 27)' : 'oklch(0.4 0.12 155)' };
+    });
+    const total = R.reduce((n, c) => n + c.items.filter(i => i.severity !== 'note').length, 0);
+    return {
+      cards, scanLabel: S.scanning ? 'Scanning…' : 'Re-scan', copyMsg: S.copyMsg,
+      summary: S.results ? (window.DB.connected() ? `${total} violation(s) across ${R.length} cards · database v${(window.DB.data() || {}).version ?? '—'}` : `${total} violation(s) · database not connected — data scanners ran on an empty document; connect it in the Workbench for a full scan.`) : 'Scanning registered files…',
+      rescan: () => this.scan(),
+      copyReq: e => navigator.clipboard.writeText(e.currentTarget.dataset.req).then(() => this.setState({ copyMsg: 'Fix request copied — paste it to Claude in a new chat.' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

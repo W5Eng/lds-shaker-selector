@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./db-config.js"></script>
+<script src="./guard.js"></script>
+<script src="./db-client.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#0f1216;color:#e6e8eb}*{box-sizing:border-box}input,select,textarea,button{font:inherit}a{color:#8ab4f8}a:hover{color:#b3ccfa}</style>
+</helmet>
+<div style="min-height:100vh;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.45;padding-bottom:80px">
+  <div style="position:sticky;top:0;z-index:5;background:#161a20;border-bottom:1px solid #262c35">
+    <div style="max-width:1400px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;margin-right:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:#8a93a0">LDS SHAKER SELECTOR</span><span style="font-weight:600">Workbench</span></div>
+      <div style="display:flex;gap:4px;overflow-x:auto;flex:1 1 auto">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="7"><button data-t="{{ t.id }}" onClick="{{ onTab }}" style="flex:0 0 auto;border:0;border-radius:8px;padding:8px 12px;min-height:38px;cursor:pointer;background:{{ t.bg }};color:{{ t.fg }};font-weight:500;white-space:nowrap">{{ t.label }}<sc-if value="{{ t.hasCount }}"><span style="margin-left:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8ab4f8">{{ t.count }}</span></sc-if></button></sc-for>
+      </div>
+      <input value="{{ q }}" onInput="{{ onQ }}" placeholder="Search everything…" style="flex:0 1 260px;min-width:140px;padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px">
+    </div>
+  </div>
+
+  <div style="max-width:1400px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:#8a93a0">
+      <span style="padding:3px 10px;border-radius:999px;background:{{ status.bg }};color:{{ status.fg }};font-weight:600">{{ status.label }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace">{{ status.detail }}</span>
+      <sc-if value="{{ me }}"><span>· signed in as {{ me }}</span></sc-if>
+      <div ref="{{ btnRef }}" style="margin-left:auto;min-height:40px"></div>
+    </div>
+    <sc-if value="{{ authMsg }}"><div style="background:#3a2a12;color:#f2c46d;border-radius:10px;padding:10px 12px;font-size:13px;white-space:pre-wrap">{{ authMsg }}</div></sc-if>
+
+    <sc-if value="{{ isConnect }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px">
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="font-weight:600;font-size:16px">1 · Deploy the server</div>
+          <ol style="margin:0;padding-left:18px;color:#c5cad1;display:flex;flex-direction:column;gap:6px">
+            <li>Open <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> → New project → name it <em>LDS Shaker Selector DB</em>.</li>
+            <li>Paste <code>server/Code.gs</code> and <code>server/Public.gs</code> (use the Copy buttons).</li>
+            <li>Project Settings → Script properties: <code>ADMIN_DOMAIN</code>, <code>GOOGLE_CLIENT_ID</code>, later <code>GITHUB_TOKEN</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>.</li>
+            <li>Deploy → Web app: execute as <strong>Me</strong>, access <strong>Anyone</strong>. One deployment serves everyone; staff are recognised by Google sign-in.</li>
+            <li>Google Cloud → Credentials → OAuth client ID (Web). Authorized JavaScript origin for this page: <code>{{ origin }}</code></li>
+            <li>Put the URL in <code>read</code> + <code>admin</code> and the client ID in <code>googleClientId</code> in <code>db-config.js</code>. Later updates: Manage deployments → edit → New version — URL stays.</li>
+          </ol>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button data-f="server/Code.gs" onClick="{{ copyFile }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:8px 12px;min-height:38px;cursor:pointer">Copy Code.gs</button>
+            <button data-f="server/Public.gs" onClick="{{ copyFile }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:8px 12px;min-height:38px;cursor:pointer">Copy Public.gs</button>
+            <span style="font-size:12px;color:#8a93a0;align-self:center">{{ copyMsg }}</span>
+            <button data-f="server/Code.gs" onClick="{{ dlFile }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:8px 12px;min-height:38px;cursor:pointer">Download Code.gs</button>
+          </div>
+        </div>
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="font-weight:600;font-size:16px">2 · Check the connection</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#c5cad1;overflow-wrap:anywhere;word-break:break-all;min-width:0">
+            <div>read: {{ cfg.read }}</div><div>admin: {{ cfg.admin }}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button data-w="read" onClick="{{ ping }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:8px 12px;min-height:38px;cursor:pointer">Ping read</button>
+            <button data-w="admin" onClick="{{ ping }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:8px 12px;min-height:38px;cursor:pointer">Ping admin</button>
+          </div>
+          <div style="font-size:13px;color:#c5cad1;white-space:pre-wrap;font-family:'IBM Plex Mono',monospace">{{ pingMsg }}</div>
+        </div>
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="font-weight:600;font-size:16px">3 · Seed the database (once)</div>
+          <div style="color:#c5cad1;font-size:13px">Imports the 70 LDS systems, head expanders, knowledge sections and W5 links from <code>seed/lds-seed.js</code>. After this succeeds, delete the <code>seed/</code> folder — the database is the only source from then on.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button onClick="{{ seed }}" style="border:0;background:#8ab4f8;color:#0f1216;border-radius:8px;padding:8px 14px;min-height:38px;cursor:pointer;font-weight:600">Seed now</button>
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px;color:#c5cad1"><input type="checkbox" checked="{{ seedForce }}" onChange="{{ onSeedForce }}">overwrite existing</label>
+          </div>
+          <div style="font-size:13px;color:#c5cad1;white-space:pre-wrap">{{ seedMsg }}</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isList }}">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:sticky;top:60px;z-index:4;background:#0f1216;padding:6px 0">
+        <span style="font-size:13px;color:#8a93a0">{{ listCount }}</span>
+        <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3"><button data-c="{{ c.val }}" onClick="{{ onChip }}" style="border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};border-radius:999px;padding:5px 10px;min-height:32px;cursor:pointer;font-size:12px">{{ c.label }} <span style="font-family:'IBM Plex Mono',monospace;opacity:.7">{{ c.n }}</span></button></sc-for>
+        <button onClick="{{ addRow }}" style="margin-left:auto;border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 12px;min-height:34px;cursor:pointer">+ Add</button>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:2 1 420px;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+            <button data-id="{{ r.id }}" onClick="{{ onSelect }}" style="display:flex;justify-content:space-between;gap:10px;align-items:center;text-align:left;border:0;border-radius:8px;padding:10px 12px;min-height:44px;cursor:pointer;background:{{ r.bg }};color:#e6e8eb">
+              <span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span><span style="font-size:12px;color:#8a93a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ r.tagFg }};flex:0 0 auto">{{ r.tag }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasSel }}">
+          <div style="flex:1 1 320px;min-width:0;position:sticky;top:110px;background:#161a20;border:1px solid #262c35;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 130px);overflow-y:auto">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div style="display:flex;flex-direction:column"><span style="font-weight:600;font-size:15px">{{ sel.title }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a93a0">{{ sel.table }} · {{ sel.id }}</span></div>
+              <div style="display:flex;gap:6px">
+                <sc-if value="{{ sel.canDeactivate }}"><button onClick="{{ toggleActive }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">{{ sel.activeLabel }}</button></sc-if>
+                <button onClick="{{ deleteRow }}" style="border:1px solid #5a2a2a;background:#0f1216;color:#f28b82;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">Delete</button>
+              </div>
+            </div>
+            <sc-for list="{{ fields }}" as="fd" hint-placeholder-count="6">
+              <label style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:12px;color:#8a93a0">{{ fd.label }}<sc-if value="{{ fd.hint }}"> · {{ fd.hint }}</sc-if></span>
+                <sc-if value="{{ fd.isArea }}"><textarea data-k="{{ fd.key }}" value="{{ fd.value }}" onBlur="{{ onField }}" onInput="{{ onFieldLive }}" rows="6" style="width:100%;padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;font-size:14px;resize:vertical"></textarea></sc-if>
+                <sc-if value="{{ fd.isSelect }}"><select data-k="{{ fd.key }}" value="{{ fd.value }}" onChange="{{ onField }}" style="width:100%;padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px"><sc-for list="{{ fd.opts }}" as="o" hint-placeholder-count="2"><option value="{{ o }}">{{ o }}</option></sc-for></select></sc-if>
+                <sc-if value="{{ fd.isInput }}"><input data-k="{{ fd.key }}" data-num="{{ fd.num }}" value="{{ fd.value }}" onBlur="{{ onField }}" onInput="{{ onFieldLive }}" style="width:100%;padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px;font-family:{{ fd.font }}"></sc-if>
+              </label>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPublish }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px">
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="font-weight:600;font-size:16px">Publish a beta release</div>
+          <ol style="margin:0;padding-left:18px;color:#c5cad1;display:flex;flex-direction:column;gap:6px">
+            <li>Run the Inspector — every card green (notes only).</li>
+            <li>Ask Claude: “bundle Shaker Selector for release” → produces <code>dist/index.html</code>.</li>
+            <li>Paste the bundle below (or drop the file), write the note, Publish. The server writes <code>index.html</code>, <code>beta.html</code> and <code>releases/&lt;version&gt;.html</code> to GitHub via the token in Script Properties.</li>
+          </ol>
+          <input value="{{ relVersion }}" onInput="{{ onRelVersion }}" placeholder="Version, e.g. 0.1-beta.3" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px">
+          <textarea value="{{ relNote }}" onInput="{{ onRelNote }}" rows="3" placeholder="Release note (what changed, in plain words)" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;resize:vertical"></textarea>
+          <input type="file" accept=".html" onChange="{{ onBundleFile }}" style="color:#c5cad1">
+          <div style="font-size:12px;color:#8a93a0">{{ bundleInfo }}</div>
+          <button onClick="{{ publish }}" style="border:0;background:#8ab4f8;color:#0f1216;border-radius:8px;padding:10px 14px;min-height:42px;cursor:pointer;font-weight:600">Publish to GitHub Pages</button>
+          <div style="font-size:13px;color:#c5cad1;white-space:pre-wrap">{{ pubMsg }}</div>
+        </div>
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:8px">
+          <div style="font-weight:600;font-size:16px">Releases</div>
+          <sc-for list="{{ releases }}" as="r" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #262c35;font-size:13px"><span style="display:flex;flex-direction:column"><span style="font-weight:500">{{ r.version }}</span><span style="color:#8a93a0">{{ r.note }}</span></span><span style="font-family:'IBM Plex Mono',monospace;color:#8a93a0;font-size:11px">{{ r.at }}</span></div>
+          </sc-for>
+          <sc-if value="{{ noReleases }}"><div style="color:#8a93a0;font-size:13px">Nothing published yet.</div></sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLog }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px">
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600;font-size:16px">Change log</span><button onClick="{{ loadHistory }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">Refresh</button></div>
+          <sc-for list="{{ log }}" as="l" hint-placeholder-count="5"><div style="display:flex;gap:10px;padding:6px 0;border-top:1px solid #262c35;font-size:13px"><span style="font-family:'IBM Plex Mono',monospace;color:#8ab4f8;flex:0 0 44px">v{{ l.v }}</span><span style="flex:1 1 auto">{{ l.desc }}</span><span style="color:#8a93a0;font-size:12px;flex:0 0 auto">{{ l.who }} · {{ l.at }}</span></div></sc-for>
+        </div>
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:8px">
+          <div style="font-weight:600;font-size:16px">Checkpoints</div>
+          <div style="display:flex;gap:8px"><input value="{{ cpLabel }}" onInput="{{ onCpLabel }}" placeholder="Label" style="flex:1 1 auto;padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px"><button onClick="{{ checkpoint }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:8px 12px;min-height:38px;cursor:pointer">Checkpoint</button></div>
+          <sc-for list="{{ checkpoints }}" as="c" hint-placeholder-count="2"><div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #262c35;font-size:13px;align-items:center"><span>{{ c.label }} <span style="color:#8a93a0">v{{ c.v }} · {{ c.at }}</span></span><button data-id="{{ c.id }}" onClick="{{ restore }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:4px 10px;min-height:30px;cursor:pointer;font-size:12px">Restore</button></div></sc-for>
+          <div style="font-size:13px;color:#c5cad1">{{ logMsg }}</div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="position:fixed;left:0;right:0;bottom:0;background:#161a20;border-top:1px solid #262c35;z-index:10">
+    <div style="max-width:1400px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a93a0">v{{ version }} · {{ pendingLabel }}</span>
+      <span style="font-size:13px;color:{{ msgCol }};flex:1 1 auto">{{ msg }}</span>
+      <button onClick="{{ discard }}" style="border:1px solid #2c3440;background:transparent;color:#e6e8eb;border-radius:8px;padding:8px 12px;min-height:40px;cursor:pointer">Discard</button>
+      <button onClick="{{ push }}" style="border:0;background:{{ pushBg }};color:#0f1216;border-radius:8px;padding:8px 16px;min-height:40px;cursor:pointer;font-weight:600">Push changes</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tab: 'connect', q: '', sel: null, chip: '', msg: '', msgErr: false, pingMsg: '', seedMsg: '', copyMsg: '', seedForce: false, relVersion: '', relNote: '', bundle: '', pubMsg: '', log: [], checkpoints: [], cpLabel: '', logMsg: '', draft: {} };
+  TABLES = {
+    library: { table: 'systems', label: 'Library', title: r => r.name, sub: r => `${r.shaker} · ${r.amp} · sine ${r.sine ?? '—'} lbf · ${r.phase || '?'} · lead ${r.leadMin ?? '?'}–${r.leadMax ?? '?'} wk`, chipKey: 'shaker',
+      fields: [['name', 'System name'], ['shaker', 'Shaker'], ['armature', 'Armature (mm)', 'num'], ['amp', 'Amplifier'], ['sine', 'Sine force (lbf pk)', 'num'], ['random', 'Random force (lbf rms)', 'num'], ['shock', 'Half-sine shock force (lbf pk)', 'num'], ['disp', 'Displacement (in pk-pk)', 'num'], ['vel', 'Sine velocity (in/s pk)', 'num'], ['shockVel', 'Shock velocity (in/s pk)', 'num'], ['sineAcc', 'Sine accel bare table (g pk)', 'num'], ['randAcc', 'Random accel bare table (Grms)', 'num'], ['arm', 'Armature weight (lb)', 'num'], ['load', 'Static load support (lb)', 'num'], ['fmin', 'Min freq (Hz)', 'num'], ['fmax', 'Max freq (Hz)', 'num'], ['res', 'Armature resonance (Hz)', 'num'], ['dia', 'Armature dia (in)', 'num'], ['phase', 'Power', 'select', ['1ph', '3ph']], ['leadMin', 'Lead time min (wk)', 'num'], ['leadMax', 'Lead time max (wk)', 'num'], ['src', 'Source datasheet'], ['notes', 'Notes (memo only)', 'area']] },
+    heads: { table: 'headExpanders', label: 'Head expanders', title: r => r.name, sub: r => `${r.wt} lb · barrier ${r.tb} lb · 1st mode ${r.mode ?? '—'} Hz`, fields: [['name', 'Name'], ['wt', 'Weight (lb)', 'num'], ['tb', 'Thermal barrier weight (lb)', 'num'], ['mode', '1st vertical mode (Hz)', 'num'], ['fits', 'Compatible shakers']] },
+    kb: { table: 'kb', label: 'Knowledge', title: r => r.title, sub: r => (r.body || '').slice(0, 90), chipKey: 'audience', fields: [['title', 'Title'], ['order', 'Order', 'num'], ['audience', 'Audience', 'select', ['all', 'staff']], ['body', 'Body (markdown, one fact per line)', 'area']] },
+    links: { table: 'links', label: 'W5 links', title: r => r.label, sub: r => r.url, chipKey: 'topic', fields: [['label', 'Label'], ['url', 'URL'], ['topic', 'Topic', 'select', ['general', 'shaker', 'chamber', 'sensors', 'controller', 'daq', 'service']]] },
+    feedback: { table: 'feedback', label: 'Feedback', title: r => `${r.kind} — ${(r.text || '').slice(0, 70)}`, sub: r => `${r.at ? r.at.slice(0, 16).replace('T', ' ') : ''} · step ${r.step || '—'} · ${r.appVersion || ''} · ${r.from || 'anonymous'}`, chipKey: 'status', tag: r => r.status, noAdd: true,
+      fields: [['status', 'Status', 'select', ['new', 'triaged', 'fixed', 'wontfix']], ['kind', 'Kind'], ['text', 'Report', 'area'], ['reply', 'Internal reply / fix note', 'area'], ['summary', 'Call summary attached', 'area'], ['ua', 'Browser']] }
+  };
+  btnRef = React.createRef();
+  componentDidMount() {
+    window.DB.configure({ mode: 'staff' });
+    this.unsub = window.DB.subscribe(() => this.forceUpdate());
+    this.initSignIn();
+  }
+  initSignIn() {
+    const cid = (window.DB_CONFIG || {}).googleClientId;
+    if (!cid) { this.setState({ authMsg: 'Sign-in not configured: add googleClientId to db-config.js (Google Cloud → Credentials → OAuth client ID, Web). Authorized JavaScript origin: ' + location.origin }); return; }
+    const go = (n = 0) => {
+      const g = window.google && window.google.accounts && window.google.accounts.id;
+      if (!g) { if (n > 60) this.setState({ authMsg: 'Google sign-in script did not load (blocked by the browser or network).' }); else setTimeout(() => go(n + 1), 250); return; }
+      g.initialize({ client_id: cid, callback: r => this.onCredential(r.credential), auto_select: true, cancel_on_tap_outside: false });
+      if (this.btnRef.current) g.renderButton(this.btnRef.current, { theme: 'filled_black', size: 'medium', text: 'signin_with', shape: 'pill' });
+      g.prompt();
+    };
+    go();
+  }
+  onCredential(tok) {
+    let p = {}; try { p = JSON.parse(decodeURIComponent(escape(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))))); } catch (e) {}
+    window.DB.setIdToken(tok);
+    this.setState({ who: p.email || '', authMsg: '' });
+    clearTimeout(this._exp); if (p.exp) this._exp = setTimeout(() => { window.DB.setIdToken(null); this.setState({ who: '', authMsg: 'Session expired — sign in again.' }); window.google.accounts.id.prompt(); }, Math.max(10000, p.exp * 1000 - Date.now() - 60000));
+    window.DB.ready().then(() => this.say('Signed in and loaded.')).catch(e => this.say(e.message, true));
+  }
+  componentWillUnmount() { if (this.unsub) this.unsub(); }
+  db() { return window.DB.data() || {}; }
+  say(m, err) { this.setState({ msg: m, msgErr: !!err }); }
+  copy(t) {
+    const fallback = () => { const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;left:0;top:0;opacity:0'; document.body.appendChild(ta); ta.focus(); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); this.setState({ copyMsg: ok ? 'Copied — paste into Apps Script.' : 'Copy blocked by the browser — use Download instead.', copyText: ok ? '' : t }); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => this.setState({ copyMsg: 'Copied — paste into Apps Script.' }), fallback); else fallback();
+  }
+  renderVals() {
+    const S = this.state, db = this.db(), cfg = window.DB_CONFIG || {}, T = this.TABLES[S.tab];
+    const tabs = [['connect', 'Connect'], ['library', 'Library'], ['heads', 'Head expanders'], ['kb', 'Knowledge'], ['links', 'W5 links'], ['feedback', 'Feedback'], ['publish', 'Publish'], ['log', 'Log']].map(([id, label]) => {
+      const n = id === 'feedback' ? (db.feedback || []).filter(f => f.status === 'new').length : 0;
+      return { id, label, bg: S.tab === id ? '#8ab4f8' : 'transparent', fg: S.tab === id ? '#0f1216' : '#e6e8eb', hasCount: n > 0, count: String(n) };
+    });
+    const connected = window.DB.connected(); const err = window.DB.error();
+    const status = !connected ? { label: 'Not connected', bg: '#3a2a12', fg: '#f2c46d', detail: 'Fill read/admin in db-config.js' } : !window.DB.signedIn() ? { label: 'Sign in required', bg: '#3a2a12', fg: '#f2c46d', detail: 'Use the Sign in with Google button →' } : err ? { label: 'Error', bg: '#4a1f1f', fg: '#f28b82', detail: err } : db.version != null ? { label: 'Live', bg: '#1f3a2a', fg: '#8ee0a8', detail: `${(db.systems || []).length} systems · ${(db.kb || []).length} knowledge sections · updated ${db.updatedAt || ''}` } : { label: 'Loading', bg: '#262c35', fg: '#c5cad1', detail: '' };
+    let rows = [], chips = [], fields = [], sel = null, listCount = '';
+    if (T) {
+      let all = (db[T.table] || []).slice();
+      if (T.table === 'feedback') all.sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+      if (T.chipKey) { const counts = {}; all.forEach(r => { const v = r[T.chipKey] || '—'; counts[v] = (counts[v] || 0) + 1; }); chips = Object.keys(counts).sort().map(v => ({ val: v, label: v, n: String(counts[v]), bg: S.chip === v ? '#8ab4f8' : 'transparent', fg: S.chip === v ? '#0f1216' : '#c5cad1', bd: S.chip === v ? '#8ab4f8' : '#2c3440' })); }
+      const q = S.q.toLowerCase();
+      const shown = all.filter(r => (!S.chip || (r[T.chipKey] || '—') === S.chip) && (!q || JSON.stringify(r).toLowerCase().includes(q)));
+      listCount = `${shown.length} of ${all.length} shown`;
+      rows = shown.map(r => ({ id: r.id, title: T.title(r) || '(untitled)', sub: T.sub(r), tag: T.tag ? T.tag(r) : (r.active === false ? 'off' : ''), tagFg: r.active === false ? '#f28b82' : '#8ab4f8', bg: S.sel === r.id ? '#1f2733' : 'transparent' }));
+      const rec = all.find(r => r.id === S.sel);
+      if (rec) {
+        sel = { title: T.title(rec), table: T.table, id: rec.id, canDeactivate: 'active' in rec || T.table !== 'feedback', activeLabel: rec.active === false ? 'Reactivate' : 'Deactivate' };
+        fields = T.fields.map(([key, label, kind, opts]) => { const draft = S.draft[rec.id + '.' + key]; const v = draft !== undefined ? draft : (rec[key] ?? ''); return { key, label, hint: kind === 'num' ? 'number' : '', value: String(v), isArea: kind === 'area', isSelect: kind === 'select', isInput: kind !== 'area' && kind !== 'select', num: kind === 'num' ? '1' : '', opts: opts || [], font: kind === 'num' ? "'IBM Plex Mono',monospace" : 'inherit' }; });
+      }
+    }
+    const pend = window.DB.pending().length;
+    const hist = S.log;
+    return {
+      tabs, q: S.q, status, me: (window.DB.me() && window.DB.me().email) || S.who || '', btnRef: this.btnRef, authMsg: S.authMsg || '', origin: location.origin, cfg: { read: cfg.read || '(empty)', admin: cfg.admin || '(empty)' }, version: db.version ?? '—',
+      isConnect: S.tab === 'connect', isList: !!T, isPublish: S.tab === 'publish', isLog: S.tab === 'log',
+      rows, chips, fields, sel, hasSel: !!sel, listCount, copyMsg: S.copyMsg, pingMsg: S.pingMsg, seedMsg: S.seedMsg, seedForce: S.seedForce,
+      pendingLabel: pend ? `${pend} unpushed change(s)` : 'all pushed', pushBg: pend ? '#8ab4f8' : '#4a5563', msg: S.msg, msgCol: S.msgErr ? '#f28b82' : '#8ee0a8',
+      relVersion: S.relVersion, relNote: S.relNote, bundleInfo: S.bundle ? `Bundle loaded: ${(S.bundle.length / 1024).toFixed(0)} KB` : 'No bundle loaded yet.', pubMsg: S.pubMsg,
+      releases: (db.releases || []).slice().reverse().map(r => ({ version: r.version, note: r.note, at: (r.at || '').slice(0, 16).replace('T', ' ') })), noReleases: !(db.releases || []).length,
+      log: hist.map(l => ({ v: l.v, desc: l.desc, who: (l.who || '').split('@')[0], at: (l.at || '').slice(0, 16).replace('T', ' ') })), checkpoints: S.checkpoints.map(c => ({ id: c.id, label: c.label || '(no label)', v: c.v, at: (c.at || '').slice(0, 16).replace('T', ' ') })), cpLabel: S.cpLabel, logMsg: S.logMsg,
+      onTab: e => { const t = e.currentTarget.dataset.t; this.setState({ tab: t, sel: null, chip: '' }); if (t === 'log') this.loadHistory(); },
+      onQ: e => this.setState({ q: e.target.value }),
+      onChip: e => this.setState(s => ({ chip: s.chip === e.currentTarget.dataset.c ? '' : e.currentTarget.dataset.c })),
+      onSelect: e => this.setState({ sel: e.currentTarget.dataset.id }),
+      onFieldLive: e => { const k = e.target.dataset.k; this.setState(s => ({ draft: { ...s.draft, [S.sel + '.' + k]: e.target.value } })); },
+      onField: e => { if (!T || !S.sel) return; const k = e.target.dataset.k; let v = e.target.value; if (e.target.dataset.num) { v = v === '' ? null : Number(v); if (v !== null && isNaN(v)) { this.say(`"${e.target.value}" is not a number — not saved.`, true); return; } } window.DB.mutate({ table: T.table, id: S.sel, patch: { [k]: v } }, `${T.table}.${S.sel}.${k}`); this.setState(s => { const d = { ...s.draft }; delete d[S.sel + '.' + k]; return { draft: d, msg: '' }; }); },
+      toggleActive: () => { if (!T || !S.sel) return; const rec = (db[T.table] || []).find(r => r.id === S.sel); window.DB.mutate({ table: T.table, id: S.sel, patch: { active: rec.active === false } }, 'toggle active'); },
+      deleteRow: () => { if (!T || !S.sel) return; if (!window.confirm('Delete this row? Restore is possible from a checkpoint.')) return; window.DB.mutate({ table: T.table, id: S.sel, delete: true }, 'delete'); this.setState({ sel: null }); },
+      addRow: () => { if (!T || T.noAdd) return; const id = window.prompt('Stable id for the new row (lowercase, dashes):'); if (!id) return; const patch = { active: true }; if (T.table === 'kb') patch.order = (db.kb || []).length + 1; window.DB.mutate({ table: T.table, id, patch }, 'add ' + id); this.setState({ sel: id }); },
+      copyFile: async e => { const f = e.currentTarget.dataset.f; try { const t = await (await fetch(new URL(f, document.baseURI))).text(); this.copy(t); } catch (err) { this.setState({ copyMsg: 'Could not read ' + f }); } },
+      dlFile: async e => { const f = e.currentTarget.dataset.f; try { const t = await (await fetch(new URL(f, document.baseURI))).text(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'text/plain' })); a.download = f.split('/').pop() + '.txt'; document.body.appendChild(a); a.click(); a.remove(); this.setState({ copyMsg: 'Downloaded — open it, select all, paste into Apps Script.' }); } catch (err) { this.setState({ copyMsg: 'Could not read ' + f }); } },
+      ping: async e => { const w = e.currentTarget.dataset.w; this.setState({ pingMsg: 'Pinging ' + w + '…' }); try { const j = await window.DB.ping(w); this.setState({ pingMsg: `${w}: OK · document v${j.version}` + (j.me ? ` · you are ${j.me.email || '(anonymous)'}${j.me.staff ? ' (staff)' : ''}` : '') }); } catch (err) { this.setState({ pingMsg: `${w}: ${err.message}` }); } },
+      onSeedForce: e => this.setState({ seedForce: e.target.checked }),
+      seed: async () => { this.setState({ seedMsg: 'Loading seed…' }); try { if (!window.LDS_SEED) { await new Promise((res, rej) => { const s = document.createElement('script'); s.src = new URL('seed/lds-seed.js', document.baseURI).href; s.onload = res; s.onerror = () => rej(new Error('seed/lds-seed.js not found — already deleted?')); document.head.appendChild(s); }); } const doc = window.LDS_SEED; const d = await window.DB.seed({ doc, force: S.seedForce }); this.setState({ seedMsg: `Seeded: ${(d.systems || []).length} systems, ${(d.headExpanders || []).length} head expanders, ${(d.kb || []).length} knowledge sections, ${(d.links || []).length} links. Now delete the seed/ folder.` }); } catch (err) { this.setState({ seedMsg: err.message }); } },
+      onRelVersion: e => this.setState({ relVersion: e.target.value }), onRelNote: e => this.setState({ relNote: e.target.value }),
+      onBundleFile: e => { const f = e.target.files && e.target.files[0]; if (!f) return; f.text().then(t => this.setState({ bundle: t })); },
+      publish: async () => { if (!S.bundle) { this.setState({ pubMsg: 'Load the bundled index.html first.' }); return; } if (!S.relVersion) { this.setState({ pubMsg: 'Give the release a version.' }); return; } this.setState({ pubMsg: 'Publishing…' }); try { const j = await window.DB.publish({ html: S.bundle, version: S.relVersion, note: S.relNote }); this.setState({ pubMsg: `Published ${j.version} → ${j.url} (beta testers: ${j.url}beta.html)` }); } catch (err) { this.setState({ pubMsg: err.message }); } },
+      loadHistory: () => this.loadHistory(), onCpLabel: e => this.setState({ cpLabel: e.target.value }),
+      checkpoint: async () => { try { await window.DB.checkpoint(S.cpLabel); this.setState({ cpLabel: '', logMsg: 'Checkpoint saved.' }); this.loadHistory(); } catch (err) { this.setState({ logMsg: err.message }); } },
+      restore: async e => { const id = e.currentTarget.dataset.id; if (!window.confirm('Restore this checkpoint? A new version is written; feedback and releases are kept.')) return; try { await window.DB.activate(id); this.setState({ logMsg: 'Restored.' }); this.loadHistory(); } catch (err) { this.setState({ logMsg: err.message }); } },
+      push: async () => { if (!pend) { this.say('Nothing to push.'); return; } try { await window.DB.push(); this.say('Pushed.'); } catch (err) { this.say(err.message, true); } },
+      discard: () => { window.DB.discard().then(() => this.say('Discarded unpushed changes.')).catch(err => this.say(err.message, true)); }
+    };
+  }
+  async loadHistory() { try { const h = await window.DB.history(); this.setState({ log: h.history.log, checkpoints: h.history.checkpoints, logMsg: '' }); } catch (e) { this.setState({ logMsg: e.message }); } }
+}
+</script>
+</body>
+</html>

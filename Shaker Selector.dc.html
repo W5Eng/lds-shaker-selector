@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./db-config.js"></script>
+<script src="./guard.js"></script>
+<script src="./db-client.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f4f1;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+a{color:oklch(0.5 0.14 252)}
+a:hover{color:oklch(0.42 0.14 252)}
+input,select,textarea,button{font:inherit}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#f5f4f1;color:#16191d;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.45;padding-bottom:120px">
+
+<div style="background:#16191d;color:#f3f4f5">
+  <div style="max-width:1240px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="flex:1 1 auto;min-width:180px;display:flex;flex-direction:column">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">W5 Engineering · LDS</div>
+      <div style="font-weight:600;font-size:17px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">Shaker Selector <span style="font-weight:400;color:#a9b0b8">· sales call guide</span><sc-if value="{{ isBeta }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:999px;background:oklch(0.78 0.12 252);color:#16191d">{{ betaLabel }}</span></sc-if></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;border:1px solid #3a4048;border-radius:999px;padding:2px">
+        <sc-for list="{{ unitOpts }}" as="u" hint-placeholder-count="2">
+          <button data-v="{{ u.val }}" onClick="{{ onUnit }}" style="border:0;border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;background:{{ u.bg }};color:{{ u.fg }};font-size:13px;font-weight:500">{{ u.label }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ toggleCore }}" style="border:1px solid #3a4048;border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;background:{{ coreBg }};color:#f3f4f5;font-size:13px">{{ coreLabel }}</button>
+      <sc-if value="{{ isBeta }}"><button onClick="{{ toggleFb }}" style="border:1px solid oklch(0.78 0.12 252);border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;background:transparent;color:oklch(0.85 0.1 252);font-size:13px">Feedback</button></sc-if>
+      <button onClick="{{ newCall }}" style="border:1px solid #3a4048;border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;background:transparent;color:#f3f4f5;font-size:13px">New call</button>
+    </div>
+  </div>
+</div>
+
+<div style="background:#ffffff;border-bottom:1px solid #e4e2dd;position:sticky;top:0;z-index:5">
+  <div style="max-width:1240px;margin:0 auto;padding:10px 16px;display:flex;gap:6px;overflow-x:auto">
+    <sc-for list="{{ stepPills }}" as="p" hint-placeholder-count="7">
+      <button data-i="{{ p.i }}" onClick="{{ onStep }}" style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;border:1px solid {{ p.bd }};background:{{ p.bg }};color:{{ p.fg }};cursor:pointer;white-space:nowrap;min-height:40px">
+        <span style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:{{ p.dotBg }};color:{{ p.dotFg }}">{{ p.mark }}</span>
+        <span style="font-weight:500;font-size:14px">{{ p.label }}</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+
+<div style="max-width:1240px;margin:0 auto;padding:20px 16px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+  <div style="flex:3 1 520px;min-width:0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a6069;letter-spacing:.04em">{{ kicker }}</div>
+      <h1 style="margin:0;font-size:28px;line-height:1.15;font-weight:700;letter-spacing:-.01em;text-wrap:balance">{{ cur.title }}</h1>
+      <p style="margin:0;color:#5a6069;font-size:15px;text-wrap:pretty">{{ cur.goal }}</p>
+    </div>
+
+    <div style="background:#1c2127;color:#eef0f2;border-radius:14px;overflow:hidden">
+      <button onClick="{{ toggleCoach }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:transparent;border:0;color:#eef0f2;cursor:pointer;text-align:left;gap:12px;min-height:48px">
+        <span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="width:8px;height:8px;border-radius:50%;background:oklch(0.78 0.12 252)"></span>
+          <span style="font-weight:600">Call coach</span>
+          <span style="color:#a9b0b8;font-size:13px">What to ask, and why</span>
+        </span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#a9b0b8">{{ coachToggle }}</span>
+      </button>
+      <sc-if value="{{ coachOpen }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:0 16px 18px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">Say it like this</div>
+            <sc-for list="{{ coachSay }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;gap:12px;align-items:baseline">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:oklch(0.78 0.12 252);flex:0 0 auto">{{ s.n }}</span>
+                <span style="font-size:16px;line-height:1.45;text-wrap:pretty">{{ s.t }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">Why it matters</div>
+            <div style="font-size:14px;color:#d3d7dc;text-wrap:pretty">{{ cur.why }}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">Listen for</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ coachListen }}" as="l" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:2px;padding:8px 12px;border:1px solid #394049;border-radius:10px;flex:1 1 200px">
+                  <span style="font-size:13px;color:#eef0f2">{{ l.cue }}</span>
+                  <span style="font-size:12px;color:oklch(0.8 0.1 252);font-family:'IBM Plex Mono',monospace">→ {{ l.opp }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-wrap:wrap;gap:20px 16px">
+        <sc-for list="{{ questions }}" as="q" hint-placeholder-count="5">
+          <div style="flex:{{ q.basis }};min-width:0;display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap">
+              <span style="font-weight:600;font-size:14px">{{ q.label }}</span>
+              <sc-if value="{{ q.core }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(0.5 0.14 252)">CORE</span></sc-if>
+            </div>
+            <sc-if value="{{ q.hasHint }}"><div style="font-size:13px;color:#5a6069;text-wrap:pretty">{{ q.hint }}</div></sc-if>
+            <sc-if value="{{ q.isText }}">
+              <input name="{{ q.id }}" value="{{ q.value }}" onInput="{{ onField }}" placeholder="{{ q.ph }}" style="width:100%;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;min-height:46px;color:#16191d">
+            </sc-if>
+            <sc-if value="{{ q.isDate }}">
+              <input type="date" name="{{ q.id }}" value="{{ q.value }}" onInput="{{ onField }}" style="width:100%;padding:10px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;min-height:46px;color:#16191d">
+            </sc-if>
+            <sc-if value="{{ q.isArea }}">
+              <textarea name="{{ q.id }}" value="{{ q.value }}" onInput="{{ onField }}" placeholder="{{ q.ph }}" rows="3" style="width:100%;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;color:#16191d;resize:vertical"></textarea>
+            </sc-if>
+            <sc-if value="{{ q.isNum }}">
+              <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+                <div style="display:flex;flex:1 1 140px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;overflow:hidden;min-height:46px">
+                  <input name="{{ q.id }}" value="{{ q.value }}" onInput="{{ onField }}" inputmode="decimal" placeholder="—" style="flex:1 1 auto;min-width:0;width:100%;padding:11px 12px;border:0;background:transparent;font-size:16px;color:#16191d;font-family:'IBM Plex Mono',monospace">
+                  <span style="display:flex;align-items:center;padding:0 12px;color:#5a6069;font-size:13px;font-family:'IBM Plex Mono',monospace;border-left:1px solid #e4e2dd">{{ q.unit }}</span>
+                </div>
+                <sc-if value="{{ q.hasAction }}">
+                  <button data-a="{{ q.action }}" onClick="{{ onAction }}" style="border:1px solid oklch(0.5 0.14 252);color:oklch(0.5 0.14 252);background:#ffffff;border-radius:10px;padding:0 12px;min-height:46px;cursor:pointer;font-size:13px;font-weight:500">{{ q.actionLabel }}</button>
+                </sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ q.isSelect }}">
+              <select name="{{ q.id }}" value="{{ q.value }}" onChange="{{ onField }}" style="width:100%;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;min-height:46px;color:#16191d">
+                <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="3"><option value="{{ o.val }}">{{ o.label }}</option></sc-for>
+              </select>
+            </sc-if>
+            <sc-if value="{{ q.isChips }}">
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="3">
+                  <button data-q="{{ o.q }}" data-v="{{ o.val }}" onClick="{{ onChip }}" style="min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:14px;cursor:pointer;text-align:left">{{ o.label }}</button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showProfile }}">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <sc-if value="{{ noTypes }}">
+          <div style="background:#ffffff;border:1px dashed #cfccc5;border-radius:14px;padding:18px 16px;color:#5a6069;font-size:14px">Pick the test types above — level entry for sine, random and shock appears here.</div>
+        </sc-if>
+
+        <sc-if value="{{ useSine }}">
+          <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-weight:600;font-size:16px">Sine sweep</div>
+                <div style="font-size:13px;color:#5a6069">One row per segment. Control = the quantity held constant.</div>
+              </div>
+              <button data-p="sine" onClick="{{ onPreset }}" style="border:1px solid #d8d5cf;background:#ffffff;border-radius:999px;padding:6px 12px;min-height:36px;cursor:pointer;font-size:13px">Load example sweep</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 36px;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5a6069;text-transform:uppercase;letter-spacing:.04em">
+              <span>Start Hz</span><span>End Hz</span><span>Control</span><span>Level</span><span></span>
+            </div>
+            <sc-for list="{{ sineRows }}" as="r" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 36px;gap:6px">
+                  <input data-t="sine" data-i="{{ r.i }}" data-k="a" value="{{ r.a }}" onInput="{{ onRow }}" inputmode="decimal" style="min-width:0;padding:9px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace;min-height:44px">
+                  <input data-t="sine" data-i="{{ r.i }}" data-k="b" value="{{ r.b }}" onInput="{{ onRow }}" inputmode="decimal" style="min-width:0;padding:9px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace;min-height:44px">
+                  <select data-t="sine" data-i="{{ r.i }}" data-k="t" value="{{ r.t }}" onChange="{{ onRow }}" style="min-width:0;padding:9px 4px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:14px;min-height:44px">
+                    <option value="g pk">g pk</option><option value="in/s pk">in/s pk</option><option value="in pk-pk">in pk-pk</option><option value="mm pk-pk">mm pk-pk</option>
+                  </select>
+                  <input data-t="sine" data-i="{{ r.i }}" data-k="l" value="{{ r.l }}" onInput="{{ onRow }}" inputmode="decimal" style="min-width:0;padding:9px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace;min-height:44px">
+                  <button data-t="sine" data-i="{{ r.i }}" onClick="{{ onRowDel }}" style="border:0;background:transparent;color:#8a8f96;cursor:pointer;font-size:18px;min-height:44px">×</button>
+                </div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ r.infoCol }}">{{ r.info }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #efede9;padding-top:12px">
+              <button data-t="sine" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:oklch(0.5 0.14 252);cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add segment</button>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500">{{ sineSum }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ useRand }}">
+          <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-weight:600;font-size:16px">Random (PSD)</div>
+                <div style="font-size:13px;color:#5a6069">Breakpoints in rising frequency. Leave PSD blank and enter a slope to compute it.</div>
+              </div>
+              <button data-p="navmat" onClick="{{ onPreset }}" style="border:1px solid #d8d5cf;background:#ffffff;border-radius:999px;padding:6px 12px;min-height:36px;cursor:pointer;font-size:13px">Load NAVMAT P-9492</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.1fr) 36px;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5a6069;text-transform:uppercase;letter-spacing:.04em">
+              <span>Hz</span><span>g²/Hz</span><span>or dB/oct</span><span>Cum. Grms</span><span></span>
+            </div>
+            <sc-for list="{{ psdRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.1fr) 36px;gap:6px;align-items:center">
+                  <input data-t="psd" data-i="{{ r.i }}" data-k="f" value="{{ r.f }}" onInput="{{ onRow }}" inputmode="decimal" style="min-width:0;padding:9px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace;min-height:44px">
+                  <input data-t="psd" data-i="{{ r.i }}" data-k="p" value="{{ r.p }}" onInput="{{ onRow }}" inputmode="decimal" style="min-width:0;padding:9px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace;min-height:44px">
+                  <input data-t="psd" data-i="{{ r.i }}" data-k="s" value="{{ r.s }}" onInput="{{ onRow }}" inputmode="decimal" style="min-width:0;padding:9px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace;min-height:44px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;padding-left:4px">{{ r.cum }}</span>
+                  <button data-t="psd" data-i="{{ r.i }}" onClick="{{ onRowDel }}" style="border:0;background:transparent;color:#8a8f96;cursor:pointer;font-size:18px;min-height:44px">×</button>
+                </div>
+                <sc-if value="{{ r.hasInfo }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ r.infoCol }}">{{ r.info }}</div></sc-if>
+              </div>
+            </sc-for>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #efede9;padding-top:12px">
+              <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                <button data-t="psd" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:oklch(0.5 0.14 252);cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add breakpoint</button>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a6069">Level offset
+                  <input name="dB" value="{{ dB }}" onInput="{{ onField }}" inputmode="decimal" placeholder="0" style="width:64px;padding:6px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace">dB
+                </label>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500">{{ randSum }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ useShock }}">
+          <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-weight:600;font-size:16px">Classical shock</div>
+                <div style="font-size:13px;color:#5a6069">Shock is often limited by stroke and velocity, not only force. LDS ratings assume a 2 ms pulse.</div>
+              </div>
+              <button data-p="shock" onClick="{{ onPreset }}" style="border:1px solid #d8d5cf;background:#ffffff;border-radius:999px;padding:6px 12px;min-height:36px;cursor:pointer;font-size:13px">Load 20 g / 11 ms</button>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr)) 36px;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5a6069;text-transform:uppercase;letter-spacing:.04em">
+              <span>Pulse</span><span>Peak g</span><span>ms</span><span></span>
+            </div>
+            <sc-for list="{{ shockRows }}" as="r" hint-placeholder-count="1">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:grid;grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr)) 36px;gap:6px">
+                  <select data-t="shock" data-i="{{ r.i }}" data-k="shape" value="{{ r.shape }}" onChange="{{ onRow }}" style="min-width:0;padding:9px 4px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:14px;min-height:44px">
+                    <option value="Half-sine">Half-sine</option><option value="Sawtooth">Sawtooth</option><option value="Square">Trapezoid / square</option>
+                  </select>
+                  <input data-t="shock" data-i="{{ r.i }}" data-k="g" value="{{ r.g }}" onInput="{{ onRow }}" inputmode="decimal" style="min-width:0;padding:9px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace;min-height:44px">
+                  <input data-t="shock" data-i="{{ r.i }}" data-k="ms" value="{{ r.ms }}" onInput="{{ onRow }}" inputmode="decimal" style="min-width:0;padding:9px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace;min-height:44px">
+                  <button data-t="shock" data-i="{{ r.i }}" onClick="{{ onRowDel }}" style="border:0;background:transparent;color:#8a8f96;cursor:pointer;font-size:18px;min-height:44px">×</button>
+                </div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a6069">{{ r.info }}</div>
+              </div>
+            </sc-for>
+            <div style="border-top:1px solid #efede9;padding-top:12px">
+              <button data-t="shock" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:oklch(0.5 0.14 252);cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add pulse</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showRec }}">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <sc-if value="{{ rec.empty }}">
+          <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:20px 16px;display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+            <div style="font-weight:600;font-size:16px">No test levels yet</div>
+            <div style="color:#5a6069;font-size:14px">Enter at least one sine, random or shock level to size a system.</div>
+            <button data-i="2" onClick="{{ onStep }}" style="border:0;background:oklch(0.5 0.14 252);color:#ffffff;border-radius:10px;padding:10px 16px;min-height:44px;cursor:pointer;font-weight:500">Go to test profile</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ rec.none }}">
+          <div style="background:oklch(0.96 0.03 27);border:1px solid oklch(0.85 0.07 27);border-radius:14px;padding:20px 16px;display:flex;flex-direction:column;gap:6px">
+            <div style="font-weight:600;font-size:16px;color:oklch(0.45 0.15 27)">No single library system fits these levels</div>
+            <div style="font-size:14px">Worst limit: {{ rec.noneDriver }}. Loop in a shaker SME for larger, water-cooled or multi-shaker options — and double-check the fixture weight.</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ rec.has }}">
+          <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5a6069">{{ rec.tierLabel }}</div>
+              <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                <div style="font-size:32px;font-weight:700;letter-spacing:-.01em;line-height:1.1">{{ rec.shaker }}</div>
+                <div style="font-size:16px;color:#5a6069">with {{ rec.amp }} amplifier</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">
+                <span style="padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;background:{{ rec.stBg }};color:{{ rec.stFg }}">{{ rec.stLabel }}</span>
+                <span style="font-size:14px;color:#3b4047">{{ rec.driver }}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="3">
+                <button data-n="{{ t.name }}" onClick="{{ onPick }}" style="flex:1 1 180px;text-align:left;display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:12px;border:2px solid {{ t.bd }};background:{{ t.bg }};cursor:pointer;min-height:44px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#5a6069">{{ t.label }}</span>
+                  <span style="font-weight:600;font-size:15px;color:#16191d">{{ t.name }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ t.col }}">{{ t.pct }} peak utilization</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:#5a6069">
+                <span>Moving mass on table: <strong style="color:#16191d;font-family:'IBM Plex Mono',monospace">{{ rec.mass }}</strong></span>
+                <span>{{ rec.freq }}</span>
+              </div>
+              <sc-for list="{{ rec.bars }}" as="b" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;flex-wrap:wrap">
+                    <span style="font-weight:500">{{ b.label }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;color:#3b4047">{{ b.txt }}</span>
+                  </div>
+                  <div style="height:8px;border-radius:999px;background:#efede9;overflow:hidden">
+                    <div style="height:100%;border-radius:999px;width:{{ b.w }};background:{{ b.col }}"></div>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="font-size:12px;color:#5a6069;font-family:'IBM Plex Mono',monospace">Source: {{ rec.src }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ hasOpps }}">
+          <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <div style="font-weight:600;font-size:16px">Complete the system</div>
+              <div style="font-size:13px;color:#5a6069">Detected from the answers on this call. Add the ones the customer agrees to — they go into the summary.</div>
+            </div>
+            <sc-for list="{{ opps }}" as="o" hint-placeholder-count="3">
+              <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid #efede9;flex-wrap:wrap">
+                <div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:4px">
+                  <div style="font-weight:600">{{ o.title }}</div>
+                  <div style="font-size:13px;color:#3b4047;text-wrap:pretty">{{ o.reason }}</div>
+                  <div style="font-size:13px;color:oklch(0.45 0.12 252);text-wrap:pretty">{{ o.say }}</div>
+                </div>
+                <button data-o="{{ o.id }}" onClick="{{ onAdd }}" style="flex:0 0 auto;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer;font-size:13px;font-weight:500">{{ o.btn }}</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;flex-wrap:wrap;gap:16px">
+          <sc-if value="{{ hasFlags }}">
+            <div style="flex:1 1 280px;background:oklch(0.97 0.035 85);border:1px solid oklch(0.88 0.07 85);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-weight:600">Loop in a shaker SME</div>
+              <sc-for list="{{ flags }}" as="x" hint-placeholder-count="2">
+                <div style="font-size:13px;display:flex;gap:8px"><span style="color:oklch(0.55 0.13 70)">●</span><span style="text-wrap:pretty">{{ x.t }}</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hasMissing }}">
+            <div style="flex:1 1 280px;background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px">
+              <div style="font-weight:600">Still missing</div>
+              <div style="font-size:13px;color:#5a6069">Core items. Ask now, or note them as follow-up.</div>
+              <sc-for list="{{ missing }}" as="m" hint-placeholder-count="3">
+                <button data-i="{{ m.i }}" onClick="{{ onStep }}" style="border:0;background:transparent;padding:6px 0;text-align:left;cursor:pointer;display:flex;justify-content:space-between;gap:8px;font-size:14px;color:#16191d;min-height:36px">
+                  <span>{{ m.label }}</span><span style="color:oklch(0.5 0.14 252);font-size:12px;font-family:'IBM Plex Mono',monospace">{{ m.step }} →</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button onClick="{{ copySummary }}" style="flex:1 1 200px;border:0;background:#16191d;color:#ffffff;border-radius:12px;padding:12px 16px;min-height:48px;cursor:pointer;font-weight:600">{{ copyLabel }}</button>
+          <a href="{{ mailto }}" style="flex:1 1 200px;display:flex;align-items:center;justify-content:center;border:1px solid #16191d;color:#16191d;border-radius:12px;padding:12px 16px;min-height:48px;text-decoration:none;font-weight:600">Email to shaker specialist</a>
+        </div>
+
+        <sc-if value="{{ hasLinks }}">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:#5a6069">
+            <span>W5 pages to send the customer:</span>
+            <sc-for list="{{ links }}" as="l" hint-placeholder-count="2"><a href="{{ l.url }}" target="_blank" rel="noopener" style="padding:6px 12px;border:1px solid #d8d5cf;border-radius:999px;text-decoration:none;font-size:13px;background:#ffffff">{{ l.label }}</a></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasAlts }}">
+          <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:4px">
+            <div style="font-weight:600;font-size:16px;margin-bottom:6px">All systems that fit <span style="font-weight:400;color:#5a6069;font-size:13px">· smallest first · {{ failCount }} don’t fit</span></div>
+            <sc-for list="{{ alts }}" as="a" hint-placeholder-count="5">
+              <button data-n="{{ a.name }}" onClick="{{ onPick }}" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 8px;border:0;border-top:1px solid #efede9;background:{{ a.bg }};cursor:pointer;text-align:left;min-height:44px;font-size:14px;color:#16191d">
+                <span style="font-weight:500">{{ a.name }}</span>
+                <span style="display:flex;gap:10px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px">
+                  <span style="color:{{ a.col }}">{{ a.pct }}</span>
+                  <span style="padding:2px 8px;border-radius:999px;background:{{ a.stBg }};color:{{ a.stFg }}">{{ a.st }}</span>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:16px">
+    <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div style="font-weight:600">Live sizing</div>
+        <span style="padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;background:{{ live.stBg }};color:{{ live.stFg }}">{{ live.st }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ live.rows }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:13px">
+            <span style="color:#5a6069">{{ r.k }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;text-align:right">{{ r.v }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ live.hasTiers }}">
+        <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid #efede9;padding-top:12px">
+          <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;align-items:baseline">
+              <span style="display:flex;flex-direction:column"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#5a6069">{{ t.label }}</span><span style="font-weight:600">{{ t.name }}</span></span>
+              <span style="font-family:'IBM Plex Mono',monospace;color:{{ t.col }}">{{ t.pct }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <div style="font-size:12px;color:#5a6069;text-wrap:pretty">{{ live.note }}</div>
+    </div>
+
+    <sc-if value="{{ hasOpps }}">
+      <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:600">Opportunities</div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:oklch(0.5 0.14 252)">{{ oppCount }}</span>
+        </div>
+        <sc-for list="{{ opps }}" as="o" hint-placeholder-count="3">
+          <div style="display:flex;gap:8px;font-size:13px;align-items:baseline">
+            <span style="width:7px;height:7px;border-radius:50%;flex:0 0 auto;background:{{ o.dot }};transform:translateY(-1px)"></span>
+            <span style="display:flex;flex-direction:column"><span style="font-weight:500">{{ o.title }}</span><span style="color:#5a6069;font-size:12px">{{ o.short }}</span></span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasFlags }}">
+      <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:600">SME flags</div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:oklch(0.55 0.13 70)">{{ flagCount }}</span>
+        </div>
+        <sc-for list="{{ flags }}" as="x" hint-placeholder-count="2">
+          <div style="font-size:12px;color:#3b4047;text-wrap:pretty">{{ x.t }}</div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+</div>
+
+<sc-if value="{{ fbOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(22,25,29,.45);z-index:30;display:flex;align-items:flex-end;justify-content:center;padding:12px">
+    <div style="width:min(520px,100%);background:#ffffff;border-radius:16px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;max-height:85vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div style="display:flex;flex-direction:column"><span style="font-weight:600;font-size:16px">Beta feedback</span><span style="font-size:13px;color:#5a6069">Goes straight to the W5 team with this call attached (no customer data is sent beyond what you typed).</span></div>
+        <button onClick="{{ toggleFb }}" style="border:0;background:transparent;font-size:22px;cursor:pointer;min-width:40px;min-height:40px;color:#5a6069">×</button>
+      </div>
+      <sc-if value="{{ fbSent }}"><div style="padding:12px;border-radius:10px;background:oklch(0.95 0.04 155);color:oklch(0.4 0.12 155);font-weight:500">Thanks — received. Keep it coming.</div></sc-if>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{ fbKinds }}" as="k" hint-placeholder-count="4"><button data-k="{{ k.k }}" onClick="{{ onFbKind }}" style="min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid {{ k.bd }};background:{{ k.bg }};color:{{ k.fg }};font-size:14px;cursor:pointer">{{ k.k }}</button></sc-for>
+      </div>
+      <textarea value="{{ fbText }}" onInput="{{ onFbText }}" rows="4" placeholder="What happened, what you expected, which customer/quote if relevant…" style="width:100%;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;color:#16191d;resize:vertical"></textarea>
+      <sc-if value="{{ fbErr }}"><div style="font-size:13px;color:oklch(0.53 0.17 27)">{{ fbErr }}</div></sc-if>
+      <button onClick="{{ sendFb }}" style="border:0;background:#16191d;color:#ffffff;border-radius:12px;padding:12px 16px;min-height:48px;cursor:pointer;font-weight:600">Send to W5</button>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ chatOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;right:12px;bottom:86px;width:min(440px,calc(100vw - 24px));max-height:min(72vh,640px);background:#ffffff;border:1px solid #e4e2dd;border-radius:16px;box-shadow:0 12px 40px rgba(22,25,29,.18);z-index:20;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:#1c2127;color:#eef0f2">
+      <div style="display:flex;flex-direction:column">
+        <span style="font-weight:600">W5 Assistant</span>
+        <span style="font-size:12px;color:#a9b0b8">Knows this call, the LDS library and the W5 knowledge base</span>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button onClick="{{ chatClear }}" style="border:0;background:transparent;color:#a9b0b8;cursor:pointer;font-size:12px;min-height:36px;padding:0 8px">Clear</button>
+        <button onClick="{{ toggleChat }}" style="border:0;background:transparent;color:#eef0f2;cursor:pointer;font-size:20px;min-height:36px;min-width:36px">×</button>
+      </div>
+    </div>
+    <div style="flex:1 1 auto;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:160px">
+      <sc-if value="{{ chatEmpty }}">
+        <div style="font-size:13px;color:#5a6069;text-wrap:pretty">Ask about an unusual application, a customer objection, or what a number means. Answers cite the knowledge base and flag anything an SME should confirm.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{ chatStarters }}" as="s" hint-placeholder-count="3">
+            <button data-s="{{ s }}" onClick="{{ chatStarter }}" style="border:1px solid #d8d5cf;background:#fbfaf8;border-radius:999px;padding:8px 12px;min-height:38px;cursor:pointer;font-size:13px;text-align:left;color:#16191d">{{ s }}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-for list="{{ chatMsgs }}" as="m" hint-placeholder-count="0">
+        <div style="display:flex;justify-content:{{ m.just }}">
+          <div style="max-width:88%;padding:10px 12px;border-radius:14px;background:{{ m.bg }};color:{{ m.fg }};font-size:14px;line-height:1.45;white-space:pre-wrap;text-wrap:pretty">{{ m.text }}</div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ chatBusy }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a6069">Thinking…</div></sc-if>
+      <sc-if value="{{ chatErr }}"><div style="font-size:13px;color:oklch(0.53 0.17 27)">{{ chatErrText }}</div></sc-if>
+    </div>
+    <div style="display:flex;gap:8px;padding:10px;border-top:1px solid #e4e2dd;background:#fbfaf8">
+      <input value="{{ chatInput }}" onInput="{{ onChatInput }}" onKeyDown="{{ onChatKey }}" placeholder="Ask the assistant…" style="flex:1 1 auto;min-width:0;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#ffffff;font-size:16px;min-height:46px;color:#16191d">
+      <button onClick="{{ chatSend }}" style="border:0;background:oklch(0.5 0.14 252);color:#ffffff;border-radius:10px;padding:0 16px;min-height:46px;cursor:pointer;font-weight:600">Send</button>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ chatClosed }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ toggleChat }}" style="position:fixed;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:21;border:0;border-radius:999px;background:#1c2127;color:#eef0f2;padding:0 16px;min-height:44px;cursor:pointer;font-weight:600;font-size:14px;box-shadow:0 6px 20px rgba(22,25,29,.25);display:flex;align-items:center;gap:8px">
+  <span style="width:8px;height:8px;border-radius:50%;background:oklch(0.78 0.12 252)"></span>Ask W5
+</button>
+</sc-if>
+
+<div style="position:fixed;left:0;right:0;bottom:0;background:#ffffff;border-top:1px solid #e4e2dd;z-index:10;box-shadow:0 -4px 16px rgba(22,25,29,.05)">
+  <div style="max-width:1240px;margin:0 auto;padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px">
+    <div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#5a6069">Best fit so far</span>
+      <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px">{{ bar.name }} <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:13px;color:{{ bar.col }}">{{ bar.util }}</span></span>
+    </div>
+    <sc-if value="{{ canBack }}">
+      <button onClick="{{ back }}" style="border:1px solid #d8d5cf;background:#ffffff;border-radius:12px;padding:10px 14px;min-height:48px;cursor:pointer;font-weight:500">Back</button>
+    </sc-if>
+    <button onClick="{{ next }}" style="border:0;background:oklch(0.5 0.14 252);color:#ffffff;border-radius:12px;padding:10px 16px;min-height:48px;cursor:pointer;font-weight:600;white-space:nowrap">{{ nextLabel }}</button>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;headroom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.8,&quot;min&quot;:0.6,&quot;max&quot;:0.95,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Sizing&quot;},&quot;sigma&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3,&quot;min&quot;:2.5,&quot;max&quot;:4,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;σ&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Sizing&quot;}}">
+class Component extends DCLogic {
+  STORE = 'lds.call.v1';
+  SYS = [];
+  HEADS = []; LINKS = []; KBROWS = []; GE = {}; dbErr = ''; dbConnected = true;
+  C = { acc: 'oklch(0.5 0.14 252)', ink: '#16191d', ok: 'oklch(0.52 0.12 155)', okS: 'oklch(0.95 0.04 155)', warn: 'oklch(0.62 0.13 70)', warnS: 'oklch(0.96 0.05 85)', bad: 'oklch(0.53 0.17 27)', badS: 'oklch(0.95 0.04 27)' };
+  state = this.loadState();
+
+  // ---------- data ----------
+  steps() {
+    if (this._steps) return this._steps;
+    const envOn = f => f.env && f.env !== 'Ambient only';
+    this._steps = [
+      { label: 'Kickoff', min: 2, title: 'Kickoff & application', goal: 'Understand what they are testing and why — before any numbers.',
+        say: ['“Before we get into numbers — what are you testing, and what’s driving the project?”', '“Is this for qualification, production screening, or R&D?”', '“Do you have a test spec or RFQ you could send over? Even a PSD table or a screenshot helps.”'],
+        why: 'Purpose sets duty cycle and margin. The spec is the single best sizing input — if they have one, ask them to email it while you are still on the call.',
+        listen: [['Space, satellite, flight hardware', 'Force sensors / FLV'], ['Battery or stored energy', 'Chamber + safety review'], ['“We already have a chamber”', 'Thermal barrier + integration']],
+        q: [
+          { id: 'company', label: 'Company / organization', core: 1, type: 'text', ph: 'e.g. Northwind Avionics' },
+          { id: 'contact', label: 'Primary contact', core: 1, type: 'text', hint: 'Name, title, email, phone.' },
+          { id: 'project', label: 'Project / program name', type: 'text' },
+          { id: 'industry', label: 'Industry', type: 'single', opts: ['Aerospace / space', 'Defense', 'Automotive / EV', 'Electronics', 'Medical', 'Energy / battery', 'Consumer / packaging', 'Other'] },
+          { id: 'app', label: 'Application summary', core: 1, type: 'area', hint: 'What are they testing, and why?' },
+          { id: 'purpose', label: 'Main purpose of the system', core: 1, type: 'multi', opts: ['Qualification', 'Acceptance / production', 'R&D', 'Screening / ESS', 'Transport / packaging'] },
+          { id: 'spec', label: 'Test standard / RFQ available?', core: 1, type: 'single', opts: ['Yes, they’ll send it', 'Yes, entering now', 'No', 'Unknown'], hint: 'W5 can help interpret it.' },
+          { id: 'specName', label: 'Standard / spec', type: 'text', ph: 'e.g. MIL-STD-810H 514.8, IEC 60068-2-64', show: f => (f.spec || '').startsWith('Yes') }
+        ] },
+      { label: 'Test article', min: 3, title: 'Test article (DUT)', goal: 'Get total moving mass. Force = mass × g, so weight is the #1 sizing number.',
+        say: ['“Roughly what does the part weigh — including brackets, cables, fluids and batteries?”', '“Do you already have a fixture? If not, no problem — we’ll estimate it for now.”', '“What’s the footprint on the mounting face? That tells us if we need a head expander.”', '“Will it be powered or running during the test?”'],
+        why: 'The fixture is often heavier than the DUT and is the most common reason a system ends up undersized. An estimate is fine — mark it and move on.',
+        listen: [['Powered or sending data during test', 'DAQ + cable feedthroughs'], ['Several parts at once', 'Multi-point control + more accels'], ['Tall part or offset CG', 'SME: overturning moment']],
+        q: [
+          { id: 'dutDesc', label: 'DUT description', core: 1, type: 'area', hint: 'Product, assembly, package, battery, component or structure.' },
+          { id: 'dutWt', label: 'DUT test weight', core: 1, type: 'num', unit: 'W', hint: 'Include covers, fluids, batteries and attached hardware.' },
+          { id: 'fixWt', label: 'Fixture weight', core: 1, type: 'num', unit: 'W', hint: 'Unknown? A common starting estimate is 1–2× DUT weight.', action: 'fix15', actionLabel: 'Use 1.5× DUT' },
+          { id: 'accWt', label: 'Bolts, cables, sensors', type: 'num', unit: 'W' },
+          { id: 'foot', label: 'Largest mounting-face dimension', type: 'num', unit: 'L', hint: 'DUT or fixture, whichever is bigger.' },
+          { id: 'qty', label: 'Quantity tested at once', type: 'single', opts: ['Single DUT', 'Multiple DUTs'] },
+          { id: 'cg', label: 'Center of gravity', core: 1, type: 'single', opts: ['Centered', 'Offset', 'High CG', 'Unknown'], hint: 'Drives overturning moment, fixture and slip table choices.' },
+          { id: 'oper', label: 'Operational during test?', type: 'multi', opts: ['No', 'Power', 'Data', 'RF', 'Fluid / gas', 'Cooling'] },
+          { id: 'concerns', label: 'Special concerns', type: 'multi', opts: ['Battery / stored energy', 'Liquid-filled', 'Fragile / optical', 'ESD', 'Cleanliness', 'Hazardous material', 'None known'] },
+          { id: 'future', label: 'Future needs', type: 'area', hint: 'Larger payloads, higher g, lower frequency, longer stroke, new standards.' }
+        ] },
+      { label: 'Test profile', min: 5, title: 'Test requirements', goal: 'Capture levels and frequency range. The shaker is sized by the worst of force, stroke and velocity.',
+        say: ['“Which tests do you need to run — sine, random, shock?”', '“What frequency range and level? For random, the breakpoint table is much better than just the gRMS.”', '“Which axes? Can the part be laid on its side, or must it stay upright?”'],
+        why: 'Low frequency drives displacement, mid frequency drives velocity, high frequency drives force. A single gRMS number can hide a low-frequency stroke problem.',
+        listen: [['Road or field recordings', 'Controller TWR + DAQ'], ['Resonance search / dwell', 'Response accelerometers'], ['Horizontal axis, can’t rotate', 'Slip table']],
+        q: [
+          { id: 'types', label: 'Test types required', core: 1, type: 'multi', opts: ['Sine', 'Random', 'Shock', 'SRS / transient', 'Resonance search / dwell', 'Sine-on-random', 'Random-on-random', 'Field data / TWR'] },
+          { id: 'reqForce', label: 'Customer-stated force rating', type: 'num', unit: 'F', hint: 'Only if the RFQ names a rating (e.g. “6 kN sine/random”). Sized from payload × levels otherwise.' },
+          { id: 'reqDisp', label: 'Customer-stated stroke', type: 'num', unit: 'L', hint: 'e.g. “≥ 51 mm / 2 in pk-pk”.' },
+          { id: 'axes', label: 'Axes', core: 1, type: 'single', opts: ['Vertical only', 'Vertical + horizontal', 'Unknown'], hint: 'Horizontal testing needs a slip table, which adds moving mass.' },
+          { id: 'rotate', label: 'Can the DUT be rotated?', type: 'single', opts: ['Yes', 'No — must stay upright', 'Unknown'] }
+        ] },
+      { label: 'Mounting & environment', min: 3, title: 'Mounting, fixtures & environment', goal: 'Add the hardware that moves with the table, and check for combined environments.',
+        say: ['“How does it mount — bolt pattern, tie-down, or a drawing you can send?”', '“Will you test at temperature or humidity at the same time as vibration?”', '“Do you have a chamber today, or would that be part of this project?”'],
+        why: 'Head expanders, slip tables and thermal barriers all add moving mass. Combined environments also change sensor temperature ratings and cable routing.',
+        listen: [['Combined temp + vibe', 'Environmental chamber'], ['Wide temperature range', 'High-temp accelerometers'], ['Large footprint', 'Head expander']],
+        q: [
+          { id: 'mount', label: 'Mounting interface', core: 1, type: 'text', ph: 'e.g. 4× 1/4-20 on 6 in square, drawing to follow' },
+          { id: 'fixture', label: 'Fixture / adapter', core: 1, type: 'single', opts: ['Existing fixture', 'Need W5 fixture', 'Unknown'] },
+          { id: 'he', label: 'Head expander (vertical)', type: 'select', hint: 'Weight and 1st vertical mode from the LDS standard head expander datasheet.' },
+          { id: 'tb', label: 'Thermal barrier on head expander', type: 'single', opts: ['No', 'Yes'], show: f => f.he && f.he !== 'None' },
+          { id: 'slipWt', label: 'Slip table moving weight', type: 'num', unit: 'W', hint: 'Plate + driver bar from the combo quote or drawing.', show: f => f.axes === 'Vertical + horizontal' },
+          { id: 'env', label: 'Temperature / humidity', core: 1, type: 'single', opts: ['Ambient only', 'Temperature', 'Temp + humidity'] },
+          { id: 'chamber', label: 'Chamber', type: 'single', opts: ['Existing chamber', 'New chamber needed', 'Not sure'], show: envOn },
+          { id: 'tMin', label: 'Min temperature', type: 'num', unit: '°C', show: envOn },
+          { id: 'tMax', label: 'Max temperature', type: 'num', unit: '°C', show: envOn },
+          { id: 'rh', label: 'Humidity', type: 'num', unit: '%RH', show: f => f.env === 'Temp + humidity' },
+          { id: 'ramp', label: 'Ramp rate', type: 'num', unit: '°C/min', show: envOn },
+          { id: 'heat', label: 'DUT heat load', type: 'num', unit: 'W', show: envOn },
+          { id: 'ports', label: 'Ports / cable access', type: 'text', show: envOn }
+        ] },
+      { label: 'Controls & sensors', min: 3, title: 'Controller, sensors & force protection', goal: 'Every system needs a controller and control accelerometers — this is where the system becomes complete.',
+        say: ['“What controller are you using today? Keep that workflow, or look at an upgrade?”', '“How many channels do you monitor — control plus response points?”', '“Is this high-value or delicate hardware? Some programs require force limiting to avoid over-testing.”'],
+        why: 'On a rigid shaker, a flexible or resonant part can be driven harder than it would ever see in service. Force Limited Vibration measures input force and limits the drive to protect it.',
+        listen: [['Satellites, optics, flight hardware', 'Force sensors for FLVT'], ['“Our controller is old / unsupported”', 'New controller'], ['Monitoring DUT signals, strain, temps', 'DAQ']],
+        q: [
+          { id: 'ctrlBrand', label: 'Current controller', type: 'single', opts: ['None', 'm+p international', 'Vibration Research', 'LDS / Dactron (HBK)', 'Crystal Instruments', 'Data Physics', 'Unholtz-Dickie', 'Siemens Simcenter', 'IMV', 'Spectral Dynamics', 'Other'] },
+          { id: 'ctrlPlan', label: 'Controller plan', core: 1, type: 'single', opts: ['Reuse existing', 'Replace / upgrade', 'New — W5 to recommend'] },
+          { id: 'channels', label: 'Measurement / limit channels', type: 'num', unit: 'ch', hint: 'Control + response + limit channels.' },
+          { id: 'accels', label: 'Accelerometers needed?', type: 'single', opts: ['Yes', 'No', 'Not sure'] },
+          { id: 'accelType', label: 'Accelerometer type', type: 'single', opts: ['Single-axis', 'Triaxial', 'Both'], show: f => f.accels !== 'No' },
+          { id: 'flv', label: 'Review Force Limited Vibration (FLV)?', type: 'single', opts: ['Yes', 'No', 'Not sure — please advise'], hint: 'Protects delicate or high-value hardware from over-test.' },
+          { id: 'flvWhy', label: 'Why might FLV matter?', type: 'multi', opts: ['Space / aero / flight hardware', 'High-value or hard to replace', 'Optics / sensors / electronics', 'Lightweight / flexible structure', 'Spec requires force limiting'], show: f => f.flv && f.flv !== 'No' },
+          { id: 'daq', label: 'Data acquisition beyond control?', type: 'single', opts: ['No', 'Monitor DUT signals', 'Strain / temp / mixed sensors', 'Record field data'] }
+        ] },
+      { label: 'Facility & timing', min: 2, title: 'Facility, scope & timing', goal: 'Confirm the system can be installed and powered, and set the next step.',
+        say: ['“What power is available near the install location?”', '“Air-cooled, or do you have facility or chilled water?”', '“When do you need a quote, and when is the decision?”', '“Would you like good / better / best service plan options included?”'],
+        why: 'Larger amplifiers need 3-phase power and may need water cooling. Timing and budget tell the SME how deep to go on the first proposal.',
+        listen: [['New lab or first shaker', 'Training + turnkey install'], ['Uptime-critical production', 'Service plan + spares'], ['Tight install date', 'Flag SME early']],
+        q: [
+          { id: 'site', label: 'Installation site', core: 1, type: 'text', ph: 'City, building, lab' },
+          { id: 'power', label: 'Electrical service', core: 1, type: 'single', opts: ['480V 3ph', '208V 3ph', '400/415V 3ph', '120/230V single-phase only', 'Other / unknown'], hint: 'Single-phase only limits the choice to LPA-amplifier systems (V400–V780).' },
+          { id: 'hz', label: 'Line frequency', type: 'single', opts: ['60 Hz', '50 Hz'] },
+          { id: 'cooling', label: 'Cooling / utilities', core: 1, type: 'multi', opts: ['Air-cooled preferred', 'Facility water', 'Chiller water', 'Compressed air', 'Unknown'] },
+          { id: 'scope', label: 'Scope of equipment', core: 1, type: 'multi', opts: ['Shaker', 'Amplifier', 'Controller', 'Slip table', 'Head expander', 'Fixture', 'Chamber / thermal barrier', 'Sensors', 'Training', 'Turnkey system'] },
+          { id: 'service', label: 'Service & uptime', type: 'multi', opts: ['Good / better / best plans', 'Annual PM only', 'Recommended spares', 'Equipment quote only'] },
+          { id: 'quoteBy', label: 'Quote needed by', core: 1, type: 'date' },
+          { id: 'decision', label: 'Decision date', type: 'date' },
+          { id: 'install', label: 'Ship / install need', type: 'date' },
+          { id: 'budget', label: 'Budget range', type: 'text' },
+          { id: 'notes', label: 'Notes', type: 'area' }
+        ] },
+      { label: 'Recommendation', min: 2, title: 'Recommendation & next steps', goal: 'Read back the fit, complete the system, and agree on the next step.',
+        say: ['“Based on what you’ve shared, here’s the system that fits with headroom…”', '“To run these tests you’ll also need…” — walk through the add-ons below.', '“I’ll have our shaker specialist confirm the details and send a written proposal by …”'],
+        why: 'Reading the key numbers back lets the customer correct anything now. Confirm who receives the proposal and when.',
+        listen: [['“We might go bigger later”', 'Room-to-grow option'], ['Budget pressure', 'Economical option + phased add-ons'], ['Missing spec details', 'Send questionnaire link']],
+        q: [] }
+    ];
+    this._qmap = {};
+    this._steps.forEach(s => s.q.forEach(q => { this._qmap[q.id] = q; }));
+    return this._steps;
+  }
+
+  demo() {
+    return {
+      step: 0, coach: true, core: false, pick: null, added: {}, copied: false,
+      f: { unit: 'lb', he: 'None', tb: 'No', company: 'Demo — Northwind Avionics', contact: 'Alex Rivera, Test Lead', industry: 'Aerospace / space', app: 'Qualify an avionics enclosure: random, sine sweep and functional shock.', purpose: ['Qualification'], spec: 'Yes, entering now', specName: 'NAVMAT P-9492', dutDesc: 'Aluminum avionics enclosure, 6 connectors', dutWt: '15', fixWt: '30', cg: 'Centered', types: ['Sine', 'Random', 'Shock'], axes: 'Vertical only', env: 'Ambient only', ctrlPlan: 'New — W5 to recommend', accels: 'Yes', flv: 'Not sure — please advise', dB: '' },
+      sine: [{ a: '5', b: '13.99', t: 'in pk-pk', l: '0.5' }, { a: '13.99', b: '2000', t: 'g pk', l: '5' }],
+      psd: [{ f: '20', p: '0.01', s: '' }, { f: '80', p: '0.04', s: '' }, { f: '350', p: '0.04', s: '' }, { f: '2000', p: '', s: '-3' }],
+      shock: [{ shape: 'Half-sine', g: '20', ms: '11' }]
+    };
+  }
+  blank() {
+    return { step: 0, coach: true, core: false, pick: null, added: {}, copied: false,
+      f: { unit: 'lb', he: 'None', tb: 'No', types: [], dB: '' },
+      sine: [{ a: '', b: '', t: 'g pk', l: '' }], psd: [{ f: '', p: '', s: '' }, { f: '', p: '', s: '' }], shock: [{ shape: 'Half-sine', g: '', ms: '' }] };
+  }
+  loadState() {
+    try { const s = JSON.parse(localStorage.getItem(this.STORE)); if (s && s.f) return { ...this.blank(), ...s, copied: false }; } catch (e) {}
+    return this.demo();
+  }
+  componentDidMount() {
+    // Rule 9: the only data source is the server document via db-client
+    this.leadWeeks = s => (s.leadMin && s.leadMax) ? [s.leadMin, s.leadMax] : null;
+    this.singlePhase = s => s.phase === '1ph';
+    const take = db => { if (!db) return; this.SYS = (db.systems || []).filter(s => s.active !== false); this.HEADS = (db.headExpanders || []).filter(h => h.active !== false); this.LINKS = db.links || []; this.KBROWS = db.kb || []; this.GE = db.generalExtras || {}; this.forceUpdate(); };
+    this.dbConnected = window.DB && window.DB.connected();
+    if (window.DB) { this.unsub = window.DB.subscribe((db, st) => { take(db); this.dbErr = st.err || ''; this.forceUpdate(); }); window.DB.ready().catch(e => { this.dbErr = e.message; this.forceUpdate(); }); }
+    this.isBeta = /[?&]beta=1/.test(location.search) || (window.DB_CONFIG && /beta/i.test(window.DB_CONFIG.appVersion || ''));
+  }
+  componentWillUnmount() { if (this.unsub) this.unsub(); }
+  componentDidUpdate() {
+    try { const { copied, chatBusy, chatErr, fbOpen, fbBusy, fbErr, fbSent, ...s } = this.state; localStorage.setItem(this.STORE, JSON.stringify(s)); } catch (e) {}
+  }
+
+  // ---------- helpers ----------
+  num(v) { if (v === '' || v == null) return null; const n = parseFloat(String(v).replace(/,/g, '')); return isFinite(n) ? n : null; }
+  fmt(v, p = 3) { if (v == null || !isFinite(v)) return '—'; const a = Math.abs(v); if (a >= 1000) return Math.round(v).toLocaleString('en-US'); if (a === 0) return '0'; return String(Number(v.toPrecision(p))); }
+  pct(r) { return r == null ? '—' : Math.round(r * 100) + '%'; }
+  empty(v) { return v == null || v === '' || (Array.isArray(v) && v.length === 0); }
+  setF(k, v) { this.setState(s => ({ f: { ...s.f, [k]: v } })); }
+
+  // ---------- calculations (ported from Vibration_Test_Calculator.xlsx) ----------
+  calcReq() {
+    const { f, sine, psd, shock } = this.state; const T = f.types || []; const G = 386.089, PI2 = 2 * Math.PI;
+    const sig = this.props.sigma ?? this.GE.sigma ?? 3;
+    const useSine = T.some(t => ['Sine', 'Resonance search / dwell', 'Sine-on-random'].includes(t));
+    const useRand = T.some(t => ['Random', 'Sine-on-random', 'Random-on-random'].includes(t));
+    const useShock = T.some(t => ['Shock', 'SRS / transient'].includes(t));
+    const R = { useSine, useRand, useShock, sineAcc: 0, sineVel: 0, sineDisp: 0, grms: 0, rVel: 0, rDisp: 0, shockG: 0, shockVel: 0, shockDisp: 0, fmin: null, fmax: null };
+    const fr = (a, b) => { if (a != null) R.fmin = R.fmin == null ? a : Math.min(R.fmin, a); if (b != null) R.fmax = R.fmax == null ? b : Math.max(R.fmax, b); };
+
+    const sRows = sine.map(r => {
+      const a = this.num(r.a), b = this.num(r.b), l = this.num(r.l);
+      if (!(a > 0 && b > 0 && l > 0)) return { info: (r.a || r.b || r.l) ? 'Enter start, end and level' : 'Start → end at a constant level', err: !!(r.a || r.b || r.l) };
+      if (b <= a) return { info: 'End must exceed start', err: true };
+      let L = l, t = r.t; if (t === 'mm pk-pk') { L = l / 25.4; t = 'in pk-pk'; }
+      const acc = x => t === 'g pk' ? L : t === 'in/s pk' ? PI2 * x * L / G : (PI2 * x) ** 2 * L / 2 / G;
+      const vel = x => t === 'in/s pk' ? L : t === 'g pk' ? L * G / (PI2 * x) : PI2 * x * L / 2;
+      const dis = x => t === 'in pk-pk' ? L : t === 'g pk' ? 2 * L * G / (PI2 * x) ** 2 : 2 * L / (PI2 * x);
+      const A = Math.max(acc(a), acc(b)), V = Math.max(vel(a), vel(b)), D = Math.max(dis(a), dis(b));
+      if (useSine) { R.sineAcc = Math.max(R.sineAcc, A); R.sineVel = Math.max(R.sineVel, V); R.sineDisp = Math.max(R.sineDisp, D); fr(a, b); }
+      return { info: `${this.fmt(acc(a))}→${this.fmt(acc(b))} g · ${this.fmt(V)} in/s · ${this.fmt(D)} in pk-pk`, err: false };
+    });
+
+    const scale = 10 ** ((this.num(f.dB) || 0) / 10);
+    let pf = null, pp = null, H = 0, I = 0, J = 0, n0 = null;
+    const rRows = psd.map(r => {
+      const x = this.num(r.f); let p = this.num(r.p); const s = this.num(r.s);
+      if (x == null) return { cum: '', info: '', err: false };
+      if (p == null && s != null && pp != null) p = pp * (x / pf) ** (s / (10 * Math.log10(2)));
+      if (p == null || p <= 0) return { cum: '', info: pp == null ? 'First point needs a PSD value' : 'Enter PSD or slope', err: true };
+      if (pf != null) {
+        if (x <= pf) return { cum: '', info: 'Frequency must increase', err: true };
+        const n = Math.log(p / pp) / Math.log(x / pf), q = x / pf, w1 = (PI2 * pf) ** 2, w2 = w1 * w1;
+        H += Math.abs(n + 1) < 1e-6 ? pp * pf * Math.log(q) : pp * pf / (n + 1) * (q ** (n + 1) - 1);
+        I += Math.abs(n - 1) < 1e-6 ? pp / w1 * pf * Math.log(q) : pp / w1 * pf / (n - 1) * (q ** (n - 1) - 1);
+        J += Math.abs(n - 3) < 1e-6 ? pp / w2 * pf * Math.log(q) : pp / w2 * pf / (n - 3) * (q ** (n - 3) - 1);
+      } else n0 = x;
+      pf = x; pp = p;
+      const slope = s != null && this.empty(r.p) ? `computed ${this.fmt(p)} g²/Hz` : '';
+      return { cum: H > 0 ? this.fmt(Math.sqrt(H * scale)) : '—', info: slope, err: false };
+    });
+    if (H > 0 && useRand) {
+      R.grms = Math.sqrt(H * scale); R.rVel = sig * G * Math.sqrt(I * scale); R.rDisp = 2 * sig * G * Math.sqrt(J * scale); fr(n0, pf);
+    }
+
+    const shRows = shock.map(r => {
+      const A = this.num(r.g), ms = this.num(r.ms);
+      if (!(A > 0 && ms > 0)) return { info: 'Peak g and duration' };
+      const T_ = ms / 1000, k = r.shape === 'Half-sine' ? 2 / Math.PI : r.shape === 'Square' ? 1 : 0.5, kd = r.shape === 'Half-sine' ? 1 / Math.PI : r.shape === 'Square' ? 0.5 : 1 / 6;
+      const dv = k * A * G * T_, d = kd * A * G * T_ * T_;
+      if (useShock) { R.shockG = Math.max(R.shockG, A); R.shockVel = Math.max(R.shockVel, dv); R.shockDisp = Math.max(R.shockDisp, d); }
+      return { info: `ΔV ${this.fmt(dv)} in/s · stroke ${this.fmt(d)} in (uncompensated)` };
+    });
+
+    const kg = f.unit === 'kg';
+    R.reqForce = (this.num(f.reqForce) || 0) * (kg ? 224.809 : 1);
+    R.reqDisp = (this.num(f.reqDisp) || 0) / (kg ? 25.4 : 1);
+    R.disp = Math.max(R.sineDisp, R.rDisp, R.shockDisp, R.reqDisp);
+    R.vel = Math.max(R.sineVel, R.rVel);
+    R.any = R.sineAcc > 0 || R.grms > 0 || R.shockG > 0 || R.reqForce > 0;
+    return { R, sRows, rRows, shRows };
+  }
+
+  masses() {
+    const f = this.state.f, kg = f.unit === 'kg';
+    const w = v => { const n = this.num(v) || 0; return kg ? n * 2.20462 : n; };
+    const payload = w(f.dutWt) + w(f.fixWt) + w(f.accWt);
+    const he = this.HEADS.find(h => h.name === f.he || h.id === f.he) || { wt: 0, tb: 0, mode: null, name: f.he || 'None' };
+    const horiz = f.axes === 'Vertical + horizontal';
+    const footIn = (this.num(f.foot) || 0) / (kg ? 25.4 : 1);
+    return { payload, vHw: (he.wt || 0) + (f.tb === 'Yes' ? he.tb || 0 : 0), slip: horiz ? w(f.slipWt) : 0, horiz, heMode: he.mode, heName: he.name, footIn };
+  }
+
+  evalSys(s, R, M) {
+    const m = Math.max(s.arm + M.vHw + M.payload, M.horiz ? s.arm + M.slip + M.payload : 0);
+    const checks = []; let freqOk = true;
+    // proxy: when the datasheet omits a rating, screen against a related one so tiny systems can't pass on "no data"
+    const add = (label, req, lim, unit, skipNull, proxy) => {
+      if (!(req > 0)) return;
+      if (lim == null || lim === 0) {
+        if (skipNull) return;
+        if (proxy > 0 && req > proxy) { checks.push({ label, req, lim: proxy, ratio: req / proxy, st: 'EXCEEDS', unit: unit + ' (est.)' }); return; }
+        checks.push({ label, req, lim: null, ratio: proxy > 0 ? req / proxy : null, st: 'NO DATA', unit }); return;
+      }
+      const ratio = req / lim; checks.push({ label, req, lim, ratio, st: ratio <= 1 ? 'OK' : 'EXCEEDS', unit });
+    };
+    add('Sine force', R.sineAcc * m, s.sine, 'lbf pk');
+    add('Random force', R.grms * m, s.random, 'lbf rms', false, s.sine);
+    add('Stated sine rating', R.reqForce, s.sine, 'lbf pk');
+    add('Stated random rating', R.reqForce, s.random, 'lbf rms', false, s.sine);
+    add('Shock force', R.shockG * m, s.shock, 'lbf pk', false, s.sine ? s.sine * 2 : 0);
+    add('Stroke', R.disp, s.disp, 'in pk-pk');
+    add('Velocity', R.vel, s.vel, 'in/s pk');
+    add('Shock velocity', R.shockVel, s.shockVel || s.vel, 'in/s');
+    add('Sine accel (bare table)', R.sineAcc, s.sineAcc, 'g pk', true);
+    add('Random accel (bare table)', R.grms, s.randAcc, 'Grms', true);
+    add('Static load support', M.vHw + M.payload, s.load, 'lb');
+    if (R.fmax != null && (R.fmax > s.fmax || R.fmin < (s.fmin || 0))) freqOk = false;
+    const powerOk = !(this.state.f.power === '120/230V single-phase only' && this.singlePhase && !this.singlePhase(s));
+    const res = !freqOk || !powerOk || checks.some(c => c.st === 'EXCEEDS') ? 'FAIL' : checks.some(c => c.st === 'NO DATA') ? 'CHECK' : 'PASS';
+    // headroom target applies to force; stroke / velocity / load are pass-fail against the rated limit
+    let peak = 0, driver = null;
+    checks.forEach(c => { c.force = /force|rating/i.test(c.label); if (c.force && c.ratio != null && c.ratio > peak) { peak = c.ratio; driver = c; } });
+    if (!driver) checks.forEach(c => { if (c.ratio != null && c.ratio > peak) { peak = c.ratio; driver = c; } });
+    const lead = this.leadWeeks ? this.leadWeeks(s) : null;
+    return { s, name: s.name, m, checks, freqOk, powerOk, res, peak, driver, lead, leadTxt: lead ? `${lead[0]}–${lead[1]} wk` : 'lead time: confirm with HBK', size: s.arm * 1e6 + (s.sine || s.random || 0) }; // smallest shaker body first, then smallest amplifier
+  }
+
+  analyze() {
+    const { R, sRows, rRows, shRows } = this.calcReq(); const M = this.masses();
+    const H = this.props.headroom ?? this.GE.headroom ?? 0.8;
+    const out = { R, M, H, sRows, rRows, shRows, evals: [], cands: [], tiers: [], picked: null };
+    if (!R.any || !this.SYS.length) return out;
+    out.evals = this.SYS.map(s => this.evalSys(s, R, M));
+    out.cands = out.evals.filter(e => e.res !== 'FAIL').sort((a, b) => a.size - b.size);
+    const c = out.cands;
+    const recd = c.find(e => e.peak <= H) || null;
+    const econ = c[0] || null;
+    const grow = recd ? c.find(e => e.peak <= H * 0.6 && e.size > recd.size && e.res === 'PASS') : null;
+    if (econ && econ !== recd) out.tiers.push({ e: econ, label: recd ? 'Tightest fit' : 'Best available' });
+    if (recd) out.tiers.push({ e: recd, label: 'Recommended' });
+    if (grow) out.tiers.push({ e: grow, label: 'Room to grow' });
+    const pickE = c.find(e => e.name === this.state.pick);
+    out.picked = pickE || recd || econ;
+    out.pickedLabel = pickE ? (out.tiers.find(t => t.e === pickE)?.label || 'Selected alternative') : (recd ? 'Recommended' : 'Best available');
+    return out;
+  }
+
+  opportunities(A) {
+    const f = this.state.f, T = f.types || [], o = [], R = A.R, M = A.M, p = A.picked;
+    const envOn = f.env && f.env !== 'Ambient only';
+    const heAbove = M.heMode && R.fmax && R.fmax >= M.heMode;
+    if (f.ctrlPlan !== 'Reuse existing') {
+      const packs = [];
+      if (T.includes('Sine') || T.includes('Resonance search / dwell')) packs.push('Sine');
+      if (T.includes('Resonance search / dwell')) packs.push('Resonance search & dwell');
+      if (T.includes('Random')) packs.push('Random');
+      if (T.includes('Shock')) packs.push('Classical shock');
+      if (T.includes('SRS / transient')) packs.push('SRS');
+      if (T.includes('Sine-on-random')) packs.push('Sine-on-random');
+      if (T.includes('Random-on-random')) packs.push('Random-on-random');
+      if (T.includes('Field data / TWR')) packs.push('TWR / field data');
+      o.push({ id: 'ctrl', title: 'Vibration controller', short: packs.length ? packs.join(' · ') : 'Closed-loop control', reason: 'Every shaker needs closed-loop control.' + (packs.length ? ' Software needed: ' + packs.join(', ') + '.' : ''), say: '“Shall we quote a controller configured for these tests, so the system arrives ready to run?”' });
+    } else if (T.some(t => ['Sine-on-random', 'Random-on-random', 'Field data / TWR', 'SRS / transient'].includes(t))) {
+      o.push({ id: 'ctrl', title: 'Controller software add-ons', short: 'Mixed-mode / TWR licences', reason: 'Mixed-mode, SRS and field-data tests often need extra licences on an existing controller.', say: '“Do you know if your current controller is licensed for these test types?”' });
+    }
+    if (f.accels !== 'No') {
+      const multi = f.qty === 'Multiple DUTs' || heAbove || (M.footIn > 12);
+      const ctl = multi ? 4 : 1, resp = Math.max(2, (this.num(f.channels) || 0) - ctl);
+      const type = f.accelType === 'Triaxial' ? 'triaxial' : f.accelType === 'Both' ? 'single-axis + triaxial' : 'single-axis';
+      o.push({ id: 'accel', title: 'Accelerometers', short: `${ctl} control + ${resp} response`, reason: `${ctl} control${multi ? ' (multipoint averaging)' : ''} + ${resp} response, ${type}${envOn ? `, rated for ${f.tMin || '?'} to ${f.tMax || '?'} °C` : ''}. Response points confirm the DUT sees what the spec intends.`, say: '“How many points do you want to monitor on the part itself?”' });
+    }
+    const flvCue = f.flv === 'Yes' || (f.flv || '').startsWith('Not sure') || ['Aerospace / space', 'Defense'].includes(f.industry) || (f.concerns || []).includes('Fragile / optical') || (f.flvWhy || []).length;
+    if (flvCue && f.flv !== 'No') o.push({ id: 'flv', title: 'Force sensors for FLVT', short: 'Force-limited vibration', reason: 'Force gauges between fixture and armature (typically 3–4, triaxial) plus force channels on the controller. Limits input force at DUT resonances to prevent over-test.', say: '“For high-value hardware, many programs now force-limit. Want us to include that as an option?”' });
+    const daqCue = (f.daq && f.daq !== 'No') || (f.oper || []).includes('Data') || T.includes('Field data / TWR');
+    if (daqCue) o.push({ id: 'daq', title: 'Data acquisition (DAQ)', short: f.daq && f.daq !== 'No' ? f.daq : 'DUT monitoring', reason: 'Record DUT signals, strain or temperature in sync with the vibration test' + (T.includes('Field data / TWR') ? ', and capture field data for TWR playback' : '') + '.', say: '“Besides vibration, what else do you need to record while it runs?”' });
+    if (envOn) {
+      if (f.chamber === 'Existing chamber') o.push({ id: 'chamber', title: 'Thermal barrier + chamber integration', short: 'Existing chamber', reason: 'Thermal barrier, chamber floor interface and cable ports to combine with the existing chamber.', say: '“Can you send the chamber model and floor opening size?”' });
+      else o.push({ id: 'chamber', title: 'Environmental test chamber', short: `${f.tMin || '?'} to ${f.tMax || '?'} °C${f.env === 'Temp + humidity' ? ' + RH' : ''}`, reason: `Combined ${f.env === 'Temp + humidity' ? 'temperature/humidity' : 'temperature'} + vibration: chamber, thermal barrier and ports. Follow up with the Environmental Chamber questionnaire.`, say: '“Would you like us to quote the chamber together, so it’s sized to sit over the shaker?”' });
+    }
+    if (M.horiz) o.push({ id: 'slip', title: 'Slip table', short: 'Horizontal axes', reason: 'Required for horizontal axes when the part can’t simply be rotated.' + (!this.num(f.slipWt) ? ' Its moving weight isn’t in the sizing yet.' : ''), say: '“What table size do you need for horizontal testing?”' });
+    if (p && p.s.dia && M.footIn > p.s.dia && (f.he || 'None') === 'None') o.push({ id: 'he', title: 'Head expander', short: `${this.fmt(M.footIn)} in > ${this.fmt(p.s.dia)} in armature`, reason: `The mounting face (${this.fmt(M.footIn)} in) is larger than the ${this.fmt(p.s.dia)} in armature. A head expander adds weight — pick one on Mounting to include it.`, say: '“We’ll likely need a larger table surface — do you have a bolt pattern?”' });
+    if (f.fixture === 'Need W5 fixture') o.push({ id: 'fixture', title: 'Custom fixture design', short: 'W5 fixture', reason: 'Designed to stay stiff through the test range and included in the sizing.', say: '“Can you share a drawing or model of the part’s mounting points?”' });
+    if (!(f.service || []).includes('Equipment quote only')) o.push({ id: 'service', title: 'Service plan & spares', short: 'Good / better / best', reason: 'Preventive maintenance, calibration and recommended spares reduce downtime.', say: '“Would you like service plan options on the quote?”' });
+    if (f.ctrlBrand === 'None' || (f.scope || []).includes('Training') || (f.scope || []).includes('Turnkey system')) o.push({ id: 'train', title: 'Installation & training', short: 'Commissioning', reason: 'On-site commissioning and operator training for a new lab or first shaker.', say: '“Who on your team will be running the system day to day?”' });
+    return o;
+  }
+
+  smeFlags(A) {
+    const f = this.state.f, T = f.types || [], x = [], R = A.R, M = A.M, p = A.picked;
+    if (R.any && this.SYS.length && !A.cands.length) x.push('No library system fits — review larger, water-cooled or multi-shaker options.');
+    if (p && p.res === 'CHECK') x.push('Datasheet gives no rating for: ' + p.checks.filter(c => c.st === 'NO DATA').map(c => c.label.toLowerCase()).join(', ') + ' — confirm with HBK.');
+    if (p && p.peak > A.H) x.push(`Low headroom (${this.pct(p.peak)} of ${p.driver ? p.driver.label.toLowerCase() : 'rating'}) — confirm levels and fixture weight.`);
+    if (['Offset', 'High CG'].includes(f.cg)) x.push('Offset / high CG — check overturning moment and fixture design.');
+    if (M.heMode && R.fmax && R.fmax >= M.heMode) x.push(`Test frequency (${this.fmt(R.fmax)} Hz) is above the head expander 1st mode (${this.fmt(M.heMode)} Hz) — multipoint control and fixture survey.`);
+    if (f.flv === 'Yes' || (f.flv || '').startsWith('Not sure')) x.push('FLV requested — define force limit curve and force channels.');
+    if (T.some(t => ['Sine-on-random', 'Random-on-random', 'Field data / TWR'].includes(t))) x.push('Mixed-mode / TWR testing — confirm controller capability.');
+    if (f.env && f.env !== 'Ambient only') x.push('Combined environment — chamber integration review (Environmental Chamber questionnaire).');
+    if ((f.concerns || []).some(c => ['Battery / stored energy', 'Hazardous material'].includes(c))) x.push('Battery / hazardous DUT — safety review.');
+    if (M.horiz && !this.num(f.slipWt)) x.push('Slip table moving weight not entered — horizontal sizing is optimistic.');
+    if (f.power === '120/230V single-phase only' && R.any && A.evals.length && !A.cands.length && A.evals.some(e => !e.powerOk && e.freqOk && !e.checks.some(c => c.st === 'EXCEEDS'))) x.push('Levels need a 3-phase (SPA/XPA) system but the site has single-phase only — discuss a power upgrade, lower levels, or a lighter fixture.');
+    if (p && f.install && p.lead) { const wk = (new Date(f.install) - Date.now()) / 6048e5; if (wk < p.lead[0]) x.push(`Install need (${f.install}) is inside the ${p.leadTxt} lead time — ask HBK about build slots or a shorter-lead alternative.`); }
+    if (R.reqForce > 0 && (R.sineAcc || R.grms)) x.push('Both a stated force rating and test levels were entered — the stricter one drives the result.');
+    return x;
+  }
+
+  missingCore(R) {
+    const f = this.state.f, out = [];
+    this.steps().forEach((s, i) => s.q.forEach(q => { if (q.core && (!q.show || q.show(f)) && this.empty(f[q.id])) out.push({ label: q.label, i, step: s.label }); }));
+    if (!R.any) out.push({ label: 'Test levels (sine / random / shock)', i: 2, step: 'Test profile' });
+    return out;
+  }
+
+  stepDone(i) {
+    const f = this.state.f, s = this.steps()[i];
+    if (!s.q.length) return false;
+    return s.q.every(q => !q.core || (q.show && !q.show(f)) || !this.empty(f[q.id]));
+  }
+
+  summary(A, opps, flags, missing) {
+    const f = this.state.f, R = A.R, M = A.M, p = A.picked, u = f.unit;
+    const L = [];
+    L.push(`SHAKER SIZING SUMMARY — ${f.company || 'Customer'}`);
+    L.push(`Contact: ${f.contact || '—'} | Project: ${f.project || '—'} | Industry: ${f.industry || '—'}`);
+    L.push(`Application: ${f.app || '—'}`);
+    L.push(`Purpose: ${(f.purpose || []).join(', ') || '—'} | Spec: ${f.specName || f.spec || '—'}`);
+    L.push('');
+    L.push(`DUT: ${f.dutDesc || '—'} — ${f.dutWt || '?'} ${u}; fixture ${f.fixWt || '?'} ${u}; CG ${f.cg || '?'}`);
+    L.push(`Payload ${this.fmt(M.payload)} lb; head expander: ${M.heName}${f.tb === 'Yes' ? ' + thermal barrier' : ''}; axes: ${f.axes || '?'}`);
+    L.push(`Tests: ${(f.types || []).join(', ') || '—'}`);
+    if (R.sineAcc) L.push(`  Sine: ${this.fmt(R.sineAcc)} g pk, ${this.fmt(R.sineVel)} in/s, ${this.fmt(R.sineDisp)} in pk-pk`);
+    if (R.grms) L.push(`  Random: ${this.fmt(R.grms)} Grms, ${this.fmt(R.rDisp)} in pk-pk (${this.props.sigma ?? 3}σ)`);
+    if (R.shockG) L.push(`  Shock: ${this.state.shock.filter(r => this.num(r.g) > 0 && this.num(r.ms) > 0).map(r => `${r.shape} ${r.g} g / ${r.ms} ms`).join('; ')} — ΔV ${this.fmt(R.shockVel)} in/s, stroke ${this.fmt(R.shockDisp)} in`);
+    if (R.fmax) L.push(`  Frequency: ${this.fmt(R.fmin)}–${this.fmt(R.fmax)} Hz`);
+    L.push('');
+    if (p) {
+      L.push(`${A.pickedLabel.toUpperCase()}: ${p.name} (${p.res}, peak ${this.pct(p.peak)} — ${p.driver ? p.driver.label : ''})`);
+      L.push(`Moving mass ${this.fmt(p.m)} lb · ${p.leadTxt}`);
+      if (R.reqForce) L.push(`Customer-stated rating: ${this.fmt(R.reqForce)} lbf${R.reqDisp ? `, ${this.fmt(R.reqDisp)} in pk-pk` : ''}`);
+      A.tiers.filter(t => t.e !== p).forEach(t => L.push(`  ${t.label}: ${t.e.name} (${this.pct(t.e.peak)})`));
+    } else L.push('No library system selected.');
+    L.push('');
+    L.push(`Environment: ${f.env || '—'}${f.env && f.env !== 'Ambient only' ? ` ${f.tMin || '?'} to ${f.tMax || '?'} °C, ${f.chamber || ''}` : ''}`);
+    L.push(`Controller: ${f.ctrlBrand || '—'} / ${f.ctrlPlan || '—'} | Accels: ${f.accels || '—'} | FLV: ${f.flv || '—'} | DAQ: ${f.daq || '—'}`);
+    L.push(`Facility: ${f.site || '—'} | ${f.power || '?'} ${f.hz || ''} | Cooling: ${(f.cooling || []).join(', ') || '—'}`);
+    if (f.power === '120/230V single-phase only') L.push('  Single-phase site: only LPA-amplifier systems (V400–V780) considered.');
+    L.push(`Scope: ${(f.scope || []).join(', ') || '—'} | Service: ${(f.service || []).join(', ') || '—'}`);
+    L.push(`Quote by: ${f.quoteBy || '—'} | Decision: ${f.decision || '—'} | Install: ${f.install || '—'} | Budget: ${f.budget || '—'}`);
+    const add = opps.filter(o => this.state.added[o.id]);
+    if (add.length) { L.push(''); L.push('ADD TO PROPOSAL:'); add.forEach(o => L.push(`  • ${o.title} — ${o.short}`)); }
+    const other = opps.filter(o => !this.state.added[o.id]);
+    if (other.length) { L.push('Other opportunities discussed: ' + other.map(o => o.title).join(', ')); }
+    if (flags.length) { L.push(''); L.push('SME REVIEW:'); flags.forEach(x => L.push('  • ' + x)); }
+    if (missing.length) { L.push(''); L.push('MISSING / FOLLOW-UP: ' + missing.map(m => m.label).join('; ')); }
+    if (f.notes) { L.push(''); L.push('Notes: ' + f.notes); }
+    return L.join('\n');
+  }
+
+  // ---------- views ----------
+  qView(q, f) {
+    const C = this.C, v = f[q.id], t = q.type;
+    const unit = q.unit === 'W' ? f.unit : q.unit === 'L' ? (f.unit === 'kg' ? 'mm' : 'in') : q.unit === 'F' ? (f.unit === 'kg' ? 'kN' : 'lbf') : (q.unit || '');
+    let opts = [];
+    if (t === 'single' || t === 'multi') opts = q.opts.map(o => { const on = t === 'multi' ? (v || []).includes(o) : v === o; return { label: o, val: o, q: q.id, bg: on ? C.acc : '#ffffff', fg: on ? '#ffffff' : C.ink, bd: on ? C.acc : '#d8d5cf' }; });
+    if (t === 'select') opts = this.HEADS.map(h => ({ label: h.name === 'None' ? 'None' : `${h.name} · ${this.fmt(h.wt)} lb`, val: h.name }));
+    return { id: q.id, label: q.label, core: !!q.core, hasHint: !!q.hint, hint: q.hint || '', ph: q.ph || '', value: v ?? '', unit, opts,
+      isText: t === 'text', isArea: t === 'area', isNum: t === 'num', isDate: t === 'date', isSelect: t === 'select', isChips: t === 'single' || t === 'multi',
+      basis: t === 'num' || t === 'date' ? '1 1 200px' : '1 1 100%', hasAction: !!q.action, action: q.action || '', actionLabel: q.actionLabel || '' };
+  }
+  stat(res) {
+    const C = this.C;
+    return res === 'PASS' ? { l: 'Fits', fg: C.ok, bg: C.okS } : res === 'CHECK' ? { l: 'Fits — confirm rating', fg: 'oklch(0.48 0.11 70)', bg: C.warnS } : { l: 'Doesn’t fit', fg: C.bad, bg: C.badS };
+  }
+  utilCol(r, H) { return r > 1 ? this.C.bad : r > H ? this.C.warn : this.C.ok; }
+
+  renderVals() {
+    const S = this.state, f = S.f, steps = this.steps(), cur = steps[S.step], C = this.C;
+    const A = this.analyze(), R = A.R, M = A.M, H = A.H, p = A.picked;
+    const opps = this.opportunities(A), flags = this.smeFlags(A), missing = this.missingCore(R);
+
+    const questions = cur.q.filter(q => (!q.show || q.show(f)) && (!S.core || q.core)).map(q => this.qView(q, f));
+    const stepPills = steps.map((s, i) => { const on = i === S.step, done = this.stepDone(i);
+      return { i, label: s.label, mark: done && !on ? '✓' : String(i + 1), bg: on ? C.ink : '#ffffff', fg: on ? '#ffffff' : C.ink, bd: on ? C.ink : '#e4e2dd', dotBg: on ? '#ffffff' : done ? C.okS : '#efede9', dotFg: on ? C.ink : done ? C.ok : '#5a6069' }; });
+
+    const sineRows = S.sine.map((r, i) => ({ i, ...r, info: A.sRows[i].info, infoCol: A.sRows[i].err ? C.bad : '#5a6069' }));
+    const psdRows = S.psd.map((r, i) => ({ i, ...r, cum: A.rRows[i].cum, info: A.rRows[i].info, hasInfo: !!A.rRows[i].info, infoCol: A.rRows[i].err ? C.bad : '#5a6069' }));
+    const shockRows = S.shock.map((r, i) => ({ i, ...r, info: A.shRows[i].info }));
+
+    const tier = (e, label) => ({ name: e.name, label, pct: this.pct(e.peak) + (e.lead ? ` · ${e.leadTxt}` : ''), col: this.utilCol(e.peak, H), bd: p && e === p ? C.acc : '#e4e2dd', bg: p && e === p ? 'oklch(0.97 0.02 252)' : '#ffffff' });
+    const tiers = A.tiers.map(t => tier(t.e, t.label));
+
+    let rec = { empty: !R.any, none: R.any && this.SYS.length > 0 && !p, has: !!p, noneDriver: '' };
+    if (rec.none) { const best = A.evals.slice().sort((a, b) => a.peak - b.peak).reverse()[0]; const top = A.evals.reduce((m, e) => (!m || e.size > m.size ? e : m), null); rec.noneDriver = top && top.driver ? `${top.driver.label} on the largest system (${top.name}) at ${this.pct(top.driver.ratio)}` : (top && !top.freqOk ? 'frequency range' : 'see checks'); }
+    if (p) {
+      const st = this.stat(p.res);
+      const bars = p.checks.map(c => ({ label: c.label, txt: c.st === 'NO DATA' ? `${this.fmt(c.req)} ${c.unit} · no datasheet rating${c.ratio != null ? ' (screened vs sine)' : ''}` : `${this.fmt(c.req)} / ${this.fmt(c.lim)} ${c.unit} · ${this.pct(c.ratio)}`, w: c.ratio == null ? '0%' : Math.min(100, c.ratio * 100) + '%', col: c.ratio == null ? C.warn : this.utilCol(c.ratio, H) }));
+      rec = { ...rec, tierLabel: A.pickedLabel, shaker: p.s.shaker + (p.name.includes('(fan)') ? ' (fan)' : p.name.includes('(no fan)') ? ' (no fan)' : '') + (p.name.split(' / ')[0].replace(/\s*\(.*\)/, '') !== p.s.shaker ? '' : ''), amp: p.s.amp, stLabel: st.l, stFg: st.fg, stBg: st.bg,
+        driver: p.driver ? `Sized by ${p.driver.label.toLowerCase()} — ${this.pct(p.driver.ratio)} of rating (target ≤ ${this.pct(H)})` : '',
+        mass: `${this.fmt(p.m)} lb`, freq: (R.fmax ? `Test ${this.fmt(R.fmin)}–${this.fmt(R.fmax)} Hz · shaker ${this.fmt(p.s.fmin)}–${this.fmt(p.s.fmax)} Hz · ` : '') + (this.singlePhase && this.singlePhase(p.s) ? 'single-phase' : '3-phase') + ' · ' + p.leadTxt, bars, src: p.s.src + (p.s.notes ? ' · ' + p.s.notes : '') };
+      rec.shaker = p.name.split(' / ')[0];
+    }
+
+    const alts = A.cands.slice(0, 10).map(e => { const st = this.stat(e.res); return { name: e.name, pct: this.pct(e.peak) + (e.lead ? ` · ${e.leadTxt}` : ''), col: this.utilCol(e.peak, H), st: e.res === 'PASS' ? 'Fits' : 'Confirm', stFg: st.fg, stBg: st.bg, bg: p && e === p ? 'oklch(0.97 0.02 252)' : '#ffffff' }; });
+
+    const oppV = opps.map(o => { const on = !!S.added[o.id]; return { ...o, btn: on ? 'Added ✓' : 'Add to proposal', bg: on ? C.okS : '#ffffff', fg: on ? C.ok : C.acc, bd: on ? C.ok : C.acc, dot: on ? C.ok : C.acc }; });
+
+    const liveRows = [{ k: 'Payload (DUT + fixture + misc)', v: `${this.fmt(M.payload)} lb` }];
+    if (M.vHw) liveRows.push({ k: 'Head expander / barrier', v: `${this.fmt(M.vHw)} lb` });
+    if (M.horiz) liveRows.push({ k: 'Slip table', v: M.slip ? `${this.fmt(M.slip)} lb` : 'not entered' });
+    if (R.sineAcc) liveRows.push({ k: 'Sine', v: `${this.fmt(R.sineAcc)} g pk` });
+    if (R.grms) liveRows.push({ k: 'Random', v: `${this.fmt(R.grms)} Grms` });
+    if (R.shockG) liveRows.push({ k: 'Shock', v: `${this.fmt(R.shockG)} g · ΔV ${this.fmt(R.shockVel)} in/s` });
+    if (R.disp) liveRows.push({ k: 'Stroke needed', v: `${this.fmt(R.disp)} in pk-pk` });
+    if (R.vel) liveRows.push({ k: 'Velocity needed', v: `${this.fmt(R.vel)} in/s pk` });
+    if (R.fmax) liveRows.push({ k: 'Frequency', v: `${this.fmt(R.fmin)}–${this.fmt(R.fmax)} Hz` });
+    const lst = p ? this.stat(p.res) : null;
+    const live = { rows: liveRows, hasTiers: tiers.length > 0,
+      st: !this.dbConnected ? 'Not connected' : this.dbErr && !this.SYS.length ? 'Offline' : !this.SYS.length ? 'Loading' : !R.any ? 'Waiting for levels' : p ? (p.res === 'PASS' ? 'Fit found' : 'Confirm') : 'No fit',
+      stFg: p ? lst.fg : R.any ? C.bad : '#5a6069', stBg: p ? lst.bg : R.any ? C.badS : '#efede9',
+      note: !this.dbConnected ? 'The shaker library has not been connected yet. Open the Workbench to connect the database.' : this.dbErr ? `Library unavailable (${this.dbErr}). Showing last cached copy.` : `Checked against ${this.SYS.length} LDS systems · headroom target ${this.pct(H)} · random peaks at ${this.props.sigma ?? 3}σ.` };
+
+    const bar = p ? { name: p.name, util: this.pct(p.peak), col: this.utilCol(p.peak, H) } : { name: R.any ? 'No library system fits' : 'Enter test levels to size', util: '', col: '#5a6069' };
+    const text = this.summary(A, opps, flags, missing);
+    const last = S.step === steps.length - 1;
+
+    return {
+      cur, kicker: `STEP ${S.step + 1} OF ${steps.length} · ABOUT ${cur.min} MIN`,
+      coachOpen: S.coach, coachToggle: S.coach ? 'Hide' : 'Show',
+      coachSay: cur.say.map((t, i) => ({ n: String(i + 1).padStart(2, '0'), t })), coachListen: cur.listen.map(([cue, opp]) => ({ cue, opp })),
+      stepPills, questions, showForm: questions.length > 0, showProfile: S.step === 2, showRec: last,
+      noTypes: !(f.types || []).length, useSine: R.useSine, useRand: R.useRand, useShock: R.useShock,
+      sineRows, psdRows, shockRows, dB: f.dB || '',
+      sineSum: R.sineAcc ? `${this.fmt(R.sineAcc)} g · ${this.fmt(R.sineVel)} in/s · ${this.fmt(R.sineDisp)} in pk-pk` : '',
+      randSum: R.grms ? `${this.fmt(R.grms)} Grms · ${this.fmt(R.rDisp)} in pk-pk` : '',
+      rec, tiers, alts, hasAlts: alts.length > 0, failCount: A.evals.length - A.cands.length,
+      opps: oppV, hasOpps: oppV.length > 0, oppCount: `${Object.keys(S.added).filter(k => S.added[k] && opps.some(o => o.id === k)).length} of ${opps.length} added`,
+      flags: flags.map(t => ({ t })), hasFlags: flags.length > 0, flagCount: String(flags.length),
+      missing, hasMissing: missing.length > 0,
+      live, bar, canBack: S.step > 0, nextLabel: last ? (S.copied ? 'Copied' : 'Copy summary') : `Next: ${steps[S.step + 1].label}`,
+      copyLabel: S.copied ? 'Copied to clipboard' : 'Copy call summary',
+      mailto: `mailto:${this.GE.feedbackEmail || ''}?subject=${encodeURIComponent('Shaker sizing — ' + (f.company || 'customer'))}&body=${encodeURIComponent(text)}`,
+      unitOpts: ['lb', 'kg'].map(u => ({ label: u === 'lb' ? 'lb · in' : 'kg · mm', val: u, bg: f.unit === u ? '#f3f4f5' : 'transparent', fg: f.unit === u ? C.ink : '#f3f4f5' })),
+      coreLabel: S.core ? 'Showing core only' : 'Showing all questions', coreBg: S.core ? '#2b3139' : 'transparent',
+      chatOpen: !!S.chatOpen, chatEmpty: !(S.chat || []).length, chatBusy: !!S.chatBusy, chatErr: !!S.chatErr, chatErrText: S.chatErr || '', chatInput: S.chatInput || '',
+      chatMsgs: (S.chat || []).map(m => ({ text: m.content, just: m.role === 'user' ? 'flex-end' : 'flex-start', bg: m.role === 'user' ? C.acc : '#f1efeb', fg: m.role === 'user' ? '#ffffff' : C.ink })),
+      chatStarters: ['Why is shock velocity the sizing driver here?', 'Customer asks: can we skip the fixture weight for now?', 'What does FLV protect against, in plain words?', 'What should I ask before quoting a chamber?'],
+      chatClosed: !S.chatOpen,
+      isBeta: !!this.isBeta, betaLabel: this.GE.betaLabel || 'BETA', fbOpen: !!S.fbOpen, fbKind: S.fbKind || '', fbText: S.fbText || '', fbSent: !!S.fbSent, fbBusy: !!S.fbBusy, fbErr: S.fbErr || '',
+      fbKinds: ['Bug', 'Wrong recommendation', 'Missing question', 'Idea', 'Other'].map(k => ({ k, bg: (S.fbKind || '') === k ? C.acc : '#ffffff', fg: (S.fbKind || '') === k ? '#ffffff' : C.ink, bd: (S.fbKind || '') === k ? C.acc : '#d8d5cf' })),
+      toggleFb: () => this.setState(s => ({ fbOpen: !s.fbOpen, fbSent: false, fbErr: '' })),
+      onFbKind: e => this.setState({ fbKind: e.currentTarget.dataset.k }),
+      onFbText: e => this.setState({ fbText: e.target.value }),
+      sendFb: () => this.sendFeedback(text, cur.label),
+      links: this.LINKS.map(l => ({ label: l.label, url: l.url })), hasLinks: this.LINKS.length > 0,
+      toggleChat: () => this.setState(s => ({ chatOpen: !s.chatOpen, chatErr: '' })),
+      chatClear: () => this.setState({ chat: [], chatErr: '' }),
+      onChatInput: e => this.setState({ chatInput: e.target.value }),
+      onChatKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendChat(S.chatInput, text); } },
+      chatSend: () => this.sendChat(S.chatInput, text),
+      chatStarter: e => this.sendChat(e.currentTarget.dataset.s, text),
+
+      onField: e => this.setF(e.target.name, e.target.value),
+      onChip: e => {
+        const { q, v } = e.currentTarget.dataset; const def = this._qmap[q];
+        this.setState(s => {
+          let val;
+          if (def.type === 'multi') { const cur = s.f[q] || []; const excl = ['No', 'None known', 'Unknown', 'Equipment quote only'];
+            if (cur.includes(v)) val = cur.filter(x => x !== v); else val = excl.includes(v) ? [v] : [...cur.filter(x => !excl.includes(x)), v]; }
+          else val = s.f[q] === v ? '' : v;
+          return { f: { ...s.f, [q]: val } };
+        });
+      },
+      onAction: e => { if (e.currentTarget.dataset.a === 'fix15') { const d = this.num(f.dutWt); if (d) this.setF('fixWt', String(Number((d * 1.5).toPrecision(3)))); } },
+      onRow: e => { const { t, i, k } = e.target.dataset; const val = e.target.value; this.setState(s => { const rows = s[t].slice(); rows[+i] = { ...rows[+i], [k]: val }; return { [t]: rows }; }); },
+      onRowAdd: e => { const t = e.currentTarget.dataset.t; const blank = t === 'sine' ? { a: '', b: '', t: 'g pk', l: '' } : t === 'psd' ? { f: '', p: '', s: '' } : { shape: 'Half-sine', g: '', ms: '' };
+        this.setState(s => { const rows = s[t].slice(); if (t === 'sine' && rows.length && rows[rows.length - 1].b) blank.a = rows[rows.length - 1].b; rows.push(blank); return { [t]: rows }; }); },
+      onRowDel: e => { const { t, i } = e.currentTarget.dataset; this.setState(s => { const rows = s[t].filter((_, j) => j !== +i); return { [t]: rows.length ? rows : this.blank()[t] }; }); },
+      onPreset: e => { const pz = e.currentTarget.dataset.p; const d = this.demo(); if (pz === 'navmat') this.setState({ psd: d.psd }); if (pz === 'sine') this.setState({ sine: d.sine }); if (pz === 'shock') this.setState({ shock: d.shock }); },
+      onStep: e => { this.setState({ step: +e.currentTarget.dataset.i }); window.scrollTo({ top: 0 }); },
+      next: () => { if (last) { this.copyText(text); return; } this.setState(s => ({ step: s.step + 1 })); window.scrollTo({ top: 0 }); },
+      back: () => { this.setState(s => ({ step: Math.max(0, s.step - 1) })); window.scrollTo({ top: 0 }); },
+      toggleCoach: () => this.setState(s => ({ coach: !s.coach })),
+      toggleCore: () => this.setState(s => ({ core: !s.core })),
+      newCall: () => { if (window.confirm('Start a new call? This clears the current answers.')) { this.setState({ ...this.blank(), coach: S.coach, core: S.core }); window.scrollTo({ top: 0 }); } },
+      onUnit: e => { const u = e.currentTarget.dataset.v; if (u === f.unit) return; const k = u === 'kg' ? 1 / 2.20462 : 2.20462, kl = u === 'kg' ? 25.4 : 1 / 25.4;
+        const conv = (v, m) => { const n = this.num(v); return n == null ? v : String(Number((n * m).toPrecision(4))); };
+        this.setState(s => ({ f: { ...s.f, unit: u, dutWt: conv(s.f.dutWt, k), fixWt: conv(s.f.fixWt, k), accWt: conv(s.f.accWt, k), slipWt: conv(s.f.slipWt, k), foot: conv(s.f.foot, kl) } })); },
+      onPick: e => this.setState({ pick: e.currentTarget.dataset.n }),
+      onAdd: e => { const id = e.currentTarget.dataset.o; this.setState(s => ({ added: { ...s.added, [id]: !s.added[id] } })); },
+      copySummary: () => this.copyText(text)
+    };
+  }
+
+  // ---------- assistant ----------
+  async sendChat(q, callSummary) {
+    q = (q || '').trim(); if (!q || this.state.chatBusy) return;
+    const hist = [...(this.state.chat || []), { role: 'user', content: q }];
+    this.setState({ chat: hist, chatInput: '', chatBusy: true, chatErr: '' });
+    try {
+      if (!(window.claude && window.claude.complete)) throw new Error('The assistant is not available in this preview.');
+      const KBtext = this.KBROWS.filter(k => k.active !== false).sort((a, b) => (a.order || 0) - (b.order || 0)).map(k => '## ' + k.title + '\n' + k.body).join('\n\n');
+      const system = `You are the W5 Engineering shaker-selection assistant, helping a salesperson during a live customer call about LDS electrodynamic shaker systems. Be brief (under 120 words unless asked), plain-spoken, and practical: give the answer, then what to say or ask next. Answer in plain text only — no markdown, no asterisks, no headings; short paragraphs or simple "- " bullets. The customer's shock pulse (peak g and duration) is given in the live call section; the "2 ms" in the knowledge base is only the datasheet rating assumption — never describe the customer's pulse as 2 ms unless it is. Use the knowledge base first; when a question is outside it, say so and recommend looping in a W5 shaker SME (${this.GE.feedbackEmail || 'W5 shaker support'}). Never invent ratings — use the lookup_system tool for library numbers. Do not give prices.
+
+## Knowledge base
+${KBtext || '(empty)'}
+
+## Current call (live)
+${callSummary}`;
+      const tools = [{ name: 'lookup_system', description: 'Look up LDS shaker system ratings from the W5 library. Pass a shaker name or fragment like "V875" or "V780 / HPAK". Returns matching systems with force, stroke, velocity, accel, armature weight, frequency range.',
+        input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
+        run: async ({ query }) => { const qq = String(query || '').toLowerCase(); const hits = this.SYS.filter(s => s.name.toLowerCase().includes(qq) || s.shaker.toLowerCase().includes(qq)).slice(0, 8); const lbl = s => `${s.name}: sine force ${s.sine ?? 'n/a'} lbf pk; random force ${s.random ?? 'not rated'} lbf rms; half-sine shock force ${s.shock ?? 'not rated'} lbf pk; stroke ${s.disp ?? 'n/a'} in pk-pk; max sine velocity ${s.vel ?? 'n/a'} in/s pk; shock velocity ${s.shockVel ?? 'same as sine velocity'}; bare-table sine accel ${s.sineAcc ?? 'n/a'} g pk; bare-table random accel ${s.randAcc ?? 'n/a'} Grms; armature weight ${s.arm} lb; static load support ${s.load ?? 'n/a'} lb; frequency ${s.fmin}–${s.fmax} Hz; armature dia ${s.dia ?? 'n/a'} in; ${this.singlePhase && this.singlePhase(s) ? 'single-phase power' : '3-phase power'}; lead ${this.leadWeeks && this.leadWeeks(s) ? this.leadWeeks(s).join('–') + ' wk' : 'confirm with HBK'}; source ${s.src}${s.notes ? '; note: ' + s.notes : ''}`;
+          return hits.length ? hits.map(lbl).join('\n') : 'No matching system in the library.'; } }];
+      const reply = await window.claude.complete({ system, messages: hist.map(m => ({ role: m.role, content: m.content })), max_tokens: 700, tools });
+      const clean = String(reply || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/(^|\s)\*(\S[^*]*?)\*(?=\s|$|[.,;:])/g, '$1$2').replace(/^#{1,4}\s+/gm, '').trim();
+      this.setState(s => ({ chat: [...s.chat, { role: 'assistant', content: clean }], chatBusy: false }));
+    } catch (e) {
+      this.setState(s => ({ chat: s.chat.slice(0, -1), chatInput: q, chatBusy: false, chatErr: e.message || 'Something went wrong.' }));
+    }
+  }
+
+  async sendFeedback(summary, step) {
+    const t = (this.state.fbText || '').trim(); if (!t) { this.setState({ fbErr: 'Tell us what happened first.' }); return; }
+    this.setState({ fbBusy: true, fbErr: '' });
+    try {
+      await window.DB.feedback({ kind: this.state.fbKind || 'Other', text: t, summary, step, ua: navigator.userAgent, appVersion: (window.DB_CONFIG || {}).appVersion || '', from: window.DB.me && window.DB.me() ? window.DB.me().email : '' });
+      this.setState({ fbBusy: false, fbSent: true, fbText: '', fbKind: '' });
+    } catch (e) { this.setState({ fbBusy: false, fbErr: e.message }); }
+  }
+
+  copyText(t) {
+    const done = () => { this.setState({ copied: true }); clearTimeout(this._ct); this._ct = setTimeout(() => this.setState({ copied: false }), 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => this.fallbackCopy(t, done)); else this.fallbackCopy(t, done);
+  }
+  fallbackCopy(t, done) { const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} ta.remove(); }
+}
+</script>
+</body>
+</html>
