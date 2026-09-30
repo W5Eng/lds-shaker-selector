@@ -117,29 +117,37 @@
     <sc-if value="{{ isPublish }}">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px">
         <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px">
-          <div style="font-weight:600;font-size:16px">Publish a beta release</div>
-          <ol style="margin:0;padding-left:18px;color:#c5cad1;display:flex;flex-direction:column;gap:6px">
-            <li>Run the Inspector — every card green (notes only).</li>
-            <li>Ask Claude: “bundle Shaker Selector for release” → produces <code>dist/index.html</code>.</li>
-            <li>Paste the bundle below (or drop the file), write the note, Publish. The server writes <code>index.html</code>, <code>beta.html</code> and <code>releases/&lt;version&gt;.html</code> to GitHub via the token in Script Properties.</li>
-          </ol>
-          <input value="{{ relVersion }}" onInput="{{ onRelVersion }}" placeholder="Version, e.g. 0.1-beta.3" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px">
-          <textarea value="{{ relNote }}" onInput="{{ onRelNote }}" rows="3" placeholder="Release note (what changed, in plain words)" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;resize:vertical"></textarea>
-          <input type="file" accept=".html" onChange="{{ onBundleFile }}" style="color:#c5cad1">
-          <div style="font-size:12px;color:#8a93a0">{{ bundleInfo }}</div>
-          <button onClick="{{ publish }}" style="border:0;background:#8ab4f8;color:#0f1216;border-radius:8px;padding:10px 14px;min-height:42px;cursor:pointer;font-weight:600">Publish to GitHub Pages</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-weight:600;font-size:16px">Publish the public page</span><button onClick="{{ pubRefresh }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">↻ Refresh</button></div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#c5cad1;overflow-wrap:anywhere">
+            <span>repo: {{ pub.repo }} · branch {{ pub.branch }} · file {{ pub.path }}</span>
+            <span style="color:{{ pub.tokCol }}">{{ pub.tok }}</span>
+            <sc-if value="{{ pub.site }}"><a href="{{ pub.site }}" target="_blank" rel="noopener">{{ pub.site }}</a></sc-if>
+          </div>
+          <div style="font-size:13px;color:#c5cad1;border-top:1px solid #262c35;padding-top:10px">Build: <span style="font-family:'IBM Plex Mono',monospace;color:{{ pub.buildCol }}">{{ pub.build }}</span></div>
+          <sc-if value="{{ pub.needPick }}">
+            <div style="font-size:12px;color:#8a93a0">This page can’t read the project build directly. Pick the <code>app.html</code> Claude gave you:</div>
+            <input type="file" accept=".html" onChange="{{ onBuildFile }}" style="color:#c5cad1">
+          </sc-if>
+          <textarea value="{{ relNote }}" onInput="{{ onRelNote }}" rows="3" placeholder="What changed, in plain words (Claude pre-fills this)" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;resize:vertical"></textarea>
+          <button onClick="{{ publish }}" style="border:0;background:#8ab4f8;color:#0f1216;border-radius:8px;padding:10px 14px;min-height:42px;cursor:pointer;font-weight:600">Publish to GitHub</button>
           <div style="font-size:13px;color:#c5cad1;white-space:pre-wrap">{{ pubMsg }}</div>
+          <div style="font-size:12px;color:#8a93a0">Workbench, Inspector and server code are not published this way. Server changes: paste into Apps Script → Manage deployments → New version.</div>
         </div>
-        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:8px">
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:6px">
           <div style="font-weight:600;font-size:16px">Releases</div>
           <sc-for list="{{ releases }}" as="r" hint-placeholder-count="2">
-            <div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #262c35;font-size:13px"><span style="display:flex;flex-direction:column"><span style="font-weight:500">{{ r.version }}</span><span style="color:#8a93a0">{{ r.note }}</span></span><span style="font-family:'IBM Plex Mono',monospace;color:#8a93a0;font-size:11px">{{ r.at }}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #262c35;font-size:13px;align-items:center;flex-wrap:wrap">
+              <span style="display:flex;flex-direction:column;min-width:0;flex:1 1 200px"><span style="font-weight:500;font-family:'IBM Plex Mono',monospace">{{ r.id }}<span style="color:#8ee0a8">{{ r.liveTag }}</span></span><span style="color:#c5cad1">{{ r.note }}</span><span style="color:#8a93a0;font-size:12px">{{ r.at }} · {{ r.by }} · {{ r.size }}</span></span>
+              <span style="display:flex;gap:6px;align-items:center">
+                <sc-if value="{{ r.url }}"><a href="{{ r.url }}" target="_blank" rel="noopener" style="font-size:12px">commit</a></sc-if>
+                <button data-id="{{ r.id }}" onClick="{{ putLive }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:4px 10px;min-height:32px;cursor:pointer;font-size:12px">Put live</button>
+              </span>
+            </div>
           </sc-for>
           <sc-if value="{{ noReleases }}"><div style="color:#8a93a0;font-size:13px">Nothing published yet.</div></sc-if>
         </div>
       </div>
     </sc-if>
-
     <sc-if value="{{ isLog }}">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px">
         <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:8px">
@@ -240,10 +248,10 @@ class Component extends DCLogic {
       isConnect: S.tab === 'connect', isList: !!T, isPublish: S.tab === 'publish', isLog: S.tab === 'log',
       rows, chips, fields, sel, hasSel: !!sel, listCount, copyMsg: S.copyMsg, pingMsg: S.pingMsg, seedMsg: S.seedMsg, seedForce: S.seedForce,
       pendingLabel: pend ? `${pend} unpushed change(s)` : 'all pushed', pushBg: pend ? '#8ab4f8' : '#4a5563', msg: S.msg, msgCol: S.msgErr ? '#f28b82' : '#8ee0a8',
-      relVersion: S.relVersion, relNote: S.relNote, bundleInfo: S.bundle ? `Bundle loaded: ${(S.bundle.length / 1024).toFixed(0)} KB` : 'No bundle loaded yet.', pubMsg: S.pubMsg,
-      releases: (db.releases || []).slice().reverse().map(r => ({ version: r.version, note: r.note, at: (r.at || '').slice(0, 16).replace('T', ' ') })), noReleases: !(db.releases || []).length,
+      relNote: S.relNote, pubMsg: S.pubMsg, pub: this.pubView(),
+      releases: this.relView(db), noReleases: !this.relView(db).length,
       log: hist.map(l => ({ v: l.v, desc: l.desc, who: (l.who || '').split('@')[0], at: (l.at || '').slice(0, 16).replace('T', ' ') })), checkpoints: S.checkpoints.map(c => ({ id: c.id, label: c.label || '(no label)', v: c.v, at: (c.at || '').slice(0, 16).replace('T', ' ') })), cpLabel: S.cpLabel, logMsg: S.logMsg,
-      onTab: e => { const t = e.currentTarget.dataset.t; this.setState({ tab: t, sel: null, chip: '' }); if (t === 'log') this.loadHistory(); },
+      onTab: e => { const t = e.currentTarget.dataset.t; this.setState({ tab: t, sel: null, chip: '' }); if (t === 'log') this.loadHistory(); if (t === 'publish') this.loadPublish(); },
       onQ: e => this.setState({ q: e.target.value }),
       onChip: e => this.setState(s => ({ chip: s.chip === e.currentTarget.dataset.c ? '' : e.currentTarget.dataset.c })),
       onSelect: e => this.setState({ sel: e.currentTarget.dataset.id }),
@@ -257,15 +265,43 @@ class Component extends DCLogic {
       ping: async e => { const w = e.currentTarget.dataset.w; this.setState({ pingMsg: 'Pinging ' + w + '…' }); try { const j = await window.DB.ping(w); this.setState({ pingMsg: `${w}: OK · document v${j.version}` + (j.me ? ` · you are ${j.me.email || '(anonymous)'}${j.me.staff ? ' (staff)' : ''}` : '') }); } catch (err) { this.setState({ pingMsg: `${w}: ${err.message}` }); } },
       onSeedForce: e => this.setState({ seedForce: e.target.checked }),
       seed: async () => { this.setState({ seedMsg: 'Loading seed…' }); try { if (!window.LDS_SEED) { await new Promise((res, rej) => { const s = document.createElement('script'); s.src = new URL('seed/lds-seed.js', document.baseURI).href; s.onload = res; s.onerror = () => rej(new Error('seed/lds-seed.js not found — already deleted?')); document.head.appendChild(s); }); } const doc = window.LDS_SEED; const d = await window.DB.seed({ doc, force: S.seedForce }); this.setState({ seedMsg: `Seeded: ${(d.systems || []).length} systems, ${(d.headExpanders || []).length} head expanders, ${(d.kb || []).length} knowledge sections, ${(d.links || []).length} links. Now delete the seed/ folder.` }); } catch (err) { this.setState({ seedMsg: err.message }); } },
-      onRelVersion: e => this.setState({ relVersion: e.target.value }), onRelNote: e => this.setState({ relNote: e.target.value }),
-      onBundleFile: e => { const f = e.target.files && e.target.files[0]; if (!f) return; f.text().then(t => this.setState({ bundle: t })); },
-      publish: async () => { if (!S.bundle) { this.setState({ pubMsg: 'Load the bundled index.html first.' }); return; } if (!S.relVersion) { this.setState({ pubMsg: 'Give the release a version.' }); return; } this.setState({ pubMsg: 'Publishing…' }); try { const j = await window.DB.publish({ html: S.bundle, version: S.relVersion, note: S.relNote }); this.setState({ pubMsg: `Published ${j.version} → ${j.url} (beta testers: ${j.url}beta.html)` }); } catch (err) { this.setState({ pubMsg: err.message }); } },
+      onRelNote: e => this.setState({ relNote: e.target.value }),
+      pubRefresh: () => this.loadPublish(),
+      onBuildFile: e => { const f = e.target.files && e.target.files[0]; if (!f) return; f.text().then(t => this.setState({ build: t, buildSrc: f.name })); },
+      publish: async () => {
+        const html = S.build; if (!html) { this.setState({ pubMsg: 'No build loaded — ask Claude to "rebuild the public copy", then ↻ Refresh.' }); return; }
+        if (!window.confirm('Publish this build to the live site?')) return;
+        this.setState({ pubMsg: 'Publishing…' });
+        try { const r = await window.DB.publishPage(html, S.relNote); if (!r.ok) throw new Error(r.message); this.setState({ pubMsg: `Published ${r.id}. Live in about a minute: ${r.site}` }); window.DB.refresh(); this.loadPublish(); } catch (err) { this.setState({ pubMsg: err.message }); }
+      },
+      putLive: async e => {
+        const id = e.currentTarget.dataset.id; if (!window.confirm('Put ' + id + ' live again? It is republished as a new release.')) return;
+        this.setState({ pubMsg: 'Putting ' + id + ' live…' });
+        try { const r = await window.DB.publishRevert(id); if (!r.ok) throw new Error(r.message); this.setState({ pubMsg: `${id} is live again as ${r.id}.` }); window.DB.refresh(); this.loadPublish(); } catch (err) { this.setState({ pubMsg: err.message }); }
+      },
       loadHistory: () => this.loadHistory(), onCpLabel: e => this.setState({ cpLabel: e.target.value }),
       checkpoint: async () => { try { await window.DB.checkpoint(S.cpLabel); this.setState({ cpLabel: '', logMsg: 'Checkpoint saved.' }); this.loadHistory(); } catch (err) { this.setState({ logMsg: err.message }); } },
       restore: async e => { const id = e.currentTarget.dataset.id; if (!window.confirm('Restore this checkpoint? A new version is written; feedback and releases are kept.')) return; try { await window.DB.activate(id); this.setState({ logMsg: 'Restored.' }); this.loadHistory(); } catch (err) { this.setState({ logMsg: err.message }); } },
       push: async () => { if (!pend) { this.say('Nothing to push.'); return; } try { await window.DB.push(); this.say('Pushed.'); } catch (err) { this.say(err.message, true); } },
       discard: () => { window.DB.discard().then(() => this.say('Discarded unpushed changes.')).catch(err => this.say(err.message, true)); }
     };
+  }
+  async loadPublish() {
+    const get = p => fetch(new URL(p, document.baseURI), { cache: 'no-store' }).then(r => r.ok ? r.text() : null).catch(() => null);
+    const [html, notes] = await Promise.all([get('exports/app.html'), get('exports/app.notes.json')]);
+    let note = ''; try { note = notes ? (JSON.parse(notes).note || '') : ''; } catch (e) {}
+    this.setState(s => ({ build: html || s.build, buildSrc: html ? 'exports/app.html' : s.buildSrc, relNote: s.relNote || note }));
+    try { const st = await window.DB.publishStatus(); this.setState({ pubStatus: st }); } catch (e) { this.setState({ pubStatus: { error: e.message } }); }
+  }
+  pubView() {
+    const st = this.state.pubStatus || {}, b = this.state.build;
+    return { repo: st.repo || '—', branch: st.branch || '—', path: st.path || '—', site: st.site || '',
+      tok: st.error ? 'Server: ' + st.error : st.ready ? 'GitHub token set on the server' : st.repo ? 'GH_TOKEN missing in Script Properties' : 'Checking…', tokCol: st.ready ? '#8ee0a8' : '#f2c46d',
+      build: b ? `${this.state.buildSrc} · ${(b.length / 1024).toFixed(0)} KB` : 'not found', buildCol: b ? '#8ee0a8' : '#f2c46d', needPick: !b };
+  }
+  relView(db) {
+    const list = ((this.state.pubStatus || {}).releases) || (db.releases || []).slice().reverse();
+    return list.filter(r => r.id).map((r, i) => ({ id: r.id, note: r.note || '', at: (r.at ? new Date(r.at).toISOString() : '').slice(0, 16).replace('T', ' '), by: (r.by || r.who || '').split('@')[0], size: r.bytes ? (r.bytes / 1024).toFixed(0) + ' KB' : '', url: r.url || '', liveTag: i === 0 ? '  · live' : '' }));
   }
   async loadHistory() { try { const h = await window.DB.history(); this.setState({ log: h.history.log, checkpoints: h.history.checkpoints, logMsg: '' }); } catch (e) { this.setState({ logMsg: e.message }); } }
 }

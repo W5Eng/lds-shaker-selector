@@ -2,6 +2,7 @@
 // Reads: public-get (no token) for the public surface; get (signed-in domain user) for internal apps.
 // Writes are STAGED locally as ops and sent with push(). Cache: one localStorage key under DB_CONFIG.cachePrefix.
 (function (root) {
+  if (root.DB && root.DB.__v) return; // script may execute twice (streaming + final); keep the first instance
   var cfg = root.DB_CONFIG || {};
   var state = { db: null, mode: 'public', pending: [], subs: [], ready: null, err: null, polling: null, me: null, idToken: null };
   var CACHE = (cfg.cachePrefix || 'lds.') + 'db.cache';
@@ -29,6 +30,7 @@
   }
 
   var DB = {
+    __v: 1,
     setIdToken: function (t) { state.idToken = t || null; state.ready = null; },
     signedIn: function () { return !!state.idToken; },
     configure: function (o) { Object.assign(cfg, o || {}); if (o && o.mode) state.mode = o.mode; return DB; },
@@ -71,7 +73,9 @@
     history: function () { return call(cfg.admin, { action: 'history' }); },
     activate: function (id) { return call(cfg.admin, { action: 'activate', id: id }).then(function (j) { state.db = j.db; writeCache(j.db); emit(); return j.db; }); },
     seed: function (doc) { return call(cfg.admin, { action: 'seed', doc: doc }).then(function (j) { state.db = j.db; writeCache(j.db); emit(); return j.db; }); },
-    publish: function (payload) { return call(cfg.admin, Object.assign({ action: 'publish' }, payload)); },
+    publishStatus: function () { return call(cfg.admin, { action: 'publish-status' }); },
+    publishPage: function (html, note) { return call(cfg.admin, { action: 'publish-page', html: html, note: note }); },
+    publishRevert: function (id, note) { return call(cfg.admin, { action: 'publish-revert', id: id, note: note }); },
     feedback: function (fb) { return call(cfg.read || cfg.admin, { action: 'feedback', feedback: fb }); },
     ping: function (which) { return call(which === 'admin' ? cfg.admin : cfg.read, { action: 'ping' }); }
   };
