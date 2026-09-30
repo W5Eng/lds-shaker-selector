@@ -11,7 +11,7 @@
   try {
     var set = Storage.prototype.setItem;
     Storage.prototype.setItem = function (k, v) {
-      if (String(k).indexOf(prefix) !== 0 && String(k).indexOf('__om') !== 0 && String(k).indexOf('dc') !== 0) { violations.push(k); console.warn('[guard] blocked storage write', k); badge(); return; }
+      if (String(k).indexOf(prefix) !== 0 && String(k).indexOf('__') !== 0 && String(k).indexOf('dc') !== 0 && !/^(g_state|gsi|oauth)/i.test(String(k))) { violations.push(k); console.warn('[guard] blocked storage write', k); badge(); return; }
       return set.call(this, k, v);
     };
   } catch (e) {}
