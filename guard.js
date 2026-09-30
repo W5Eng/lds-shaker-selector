@@ -1,5 +1,6 @@
 // guard.js — runtime firewall + the scanners the Inspector runs. Name lists are built FROM the database.
 (function (root) {
+  if (root.Guard) return; // already installed (script executed twice)
   var cfg = root.DB_CONFIG || {}; var prefix = cfg.cachePrefix || 'lds.';
   var violations = [];
   function badge() {
@@ -29,7 +30,7 @@
       var names = [];
       (db.systems || []).forEach(function (s) { names.push(s.name); });
       (db.headExpanders || []).forEach(function (h) { if (h.name && h.name !== 'None') names.push(h.name); });
-      (db.kb || []).forEach(function (k) { if (k.title) names.push(k.title); });
+      (db.kb || []).forEach(function (k) { if (k.title && k.title.length >= 12 && /\s/.test(k.title)) names.push(k.title); }); // single-word titles ("Facility") are ordinary words, not data
       (db.links || []).forEach(function (l) { if (l.url) names.push(l.url); });
       var out = [];
       Object.keys(files).forEach(function (f) {
@@ -46,16 +47,22 @@
       });
       return out;
     },
-    // Rule 2: internal vocabulary on public files
+    // Rule 2: internal vocabulary on public files — only words a reader can SEE (string literals and markup text), never identifiers
     scanPublicWords: function (files, publicFiles) {
       var out = [];
+      function visible(l) {
+        var bits = [], m, re = /(['"`])((?:\\.|(?!\1).)*)\1/g;
+        while ((m = re.exec(l))) { var s = m[2]; if (/^[\w.\-\/]+$/.test(s) && !/\s/.test(s)) continue; bits.push(s.replace(/\$\{[^}]*\}/g, ' ')); }
+        var t, rt = />([^<>{}]+)</g; while ((t = rt.exec(l))) bits.push(t[1]);
+        return bits.join(' \u0001 ');
+      }
       publicFiles.forEach(function (f) {
         if (!files[f] || /db-client|guard|projection|db-config/.test(f)) return;
         lines(files[f]).forEach(function (l, i) {
+          if (isComment(l)) return;
+          var v = visible(l); if (!v) return;
           INTERNAL_WORDS.forEach(function (w) {
-            var re = new RegExp('\\b' + w + '\\b'); if (!re.test(l)) return;
-            var inText = /['"`][^'"`]*\b__W__\b[^'"`]*['"`]/.replace ? new RegExp('[\'"`>][^\'"`<]*\\b' + w + '\\b[^\'"`<]*[\'"`<]').test(l) : true;
-            out.push(finding(f, i, l, 'Rule 2', '"' + w + '" is internal vocabulary; the public surface is read by outsiders.', 'Reword or move to the Workbench.', inText && !isComment(l) ? 'violation' : 'note'));
+            if (new RegExp('\\b' + w + '\\b', 'i').test(v)) out.push(finding(f, i, l, 'Rule 2', '"' + w + '" appears in text a customer or salesperson can read. The public surface must not show internal vocabulary.', 'Reword it in plain language, or move it to the Workbench.'));
           });
         });
       });

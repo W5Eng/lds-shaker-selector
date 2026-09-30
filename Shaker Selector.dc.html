@@ -27,7 +27,7 @@ input,select,textarea,button{font:inherit}
   <div style="max-width:1240px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
     <div style="flex:1 1 auto;min-width:180px;display:flex;flex-direction:column">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">W5 Engineering · LDS</div>
-      <div style="font-weight:600;font-size:17px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">Shaker Selector <span style="font-weight:400;color:#a9b0b8">· sales call guide</span><sc-if value="{{ isBeta }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:999px;background:oklch(0.78 0.12 252);color:#16191d">{{ betaLabel }}</span></sc-if></div>
+      <div style="font-weight:600;font-size:17px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">Shaker Selector <span style="font-weight:400;color:#a9b0b8">· sales call guide</span><sc-if value="{{ hasBetaLabel }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:999px;background:oklch(0.78 0.12 252);color:#16191d">{{ betaLabel }}</span></sc-if></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div style="display:flex;border:1px solid #3a4048;border-radius:999px;padding:2px">
@@ -965,7 +965,7 @@ class Component extends DCLogic {
     const live = { rows: liveRows, hasTiers: tiers.length > 0,
       st: !this.dbConnected ? 'Not connected' : this.dbErr && !this.SYS.length ? 'Offline' : !this.SYS.length ? 'Loading' : !R.any ? 'Waiting for levels' : p ? (p.res === 'PASS' ? 'Fit found' : 'Confirm') : 'No fit',
       stFg: p ? lst.fg : R.any ? C.bad : '#5a6069', stBg: p ? lst.bg : R.any ? C.badS : '#efede9',
-      note: !this.dbConnected ? 'The shaker library has not been connected yet. Open the Workbench to connect the database.' : this.dbErr ? `Library unavailable (${this.dbErr}). Showing last cached copy.` : `Checked against ${this.SYS.length} LDS systems · headroom target ${this.pct(H)} · random peaks at ${this.props.sigma ?? 3}σ.` };
+      note: !this.dbConnected ? 'The shaker library is not available yet. Please contact W5 Engineering.' : this.dbErr ? `Library unavailable (${this.dbErr}). Showing last cached copy.` : `Checked against ${this.SYS.length} LDS systems · headroom target ${this.pct(H)} · random peaks at ${this.props.sigma ?? 3}σ.` };
 
     const bar = p ? { name: p.name, util: this.pct(p.peak), col: this.utilCol(p.peak, H) } : { name: R.any ? 'No library system fits' : 'Enter test levels to size', util: '', col: '#5a6069' };
     const text = this.summary(A, opps, flags, missing);
@@ -993,7 +993,7 @@ class Component extends DCLogic {
       chatMsgs: (S.chat || []).map(m => ({ text: m.content, just: m.role === 'user' ? 'flex-end' : 'flex-start', bg: m.role === 'user' ? C.acc : '#f1efeb', fg: m.role === 'user' ? '#ffffff' : C.ink })),
       chatStarters: ['Why is shock velocity the sizing driver here?', 'Customer asks: can we skip the fixture weight for now?', 'What does FLV protect against, in plain words?', 'What should I ask before quoting a chamber?'],
       chatClosed: !S.chatOpen,
-      isBeta: !!this.isBeta, betaLabel: this.GE.betaLabel || 'BETA', fbOpen: !!S.fbOpen, fbKind: S.fbKind || '', fbText: S.fbText || '', fbSent: !!S.fbSent, fbBusy: !!S.fbBusy, fbErr: S.fbErr || '',
+      isBeta: !!this.isBeta, betaLabel: this.GE.betaLabel ?? '', hasBetaLabel: !!this.GE.betaLabel, fbOpen: !!S.fbOpen, fbKind: S.fbKind || '', fbText: S.fbText || '', fbSent: !!S.fbSent, fbBusy: !!S.fbBusy, fbErr: S.fbErr || '',
       fbKinds: ['Bug', 'Wrong recommendation', 'Missing question', 'Idea', 'Other'].map(k => ({ k, bg: (S.fbKind || '') === k ? C.acc : '#ffffff', fg: (S.fbKind || '') === k ? '#ffffff' : C.ink, bd: (S.fbKind || '') === k ? C.acc : '#d8d5cf' })),
       toggleFb: () => this.setState(s => ({ fbOpen: !s.fbOpen, fbSent: false, fbErr: '' })),
       onFbKind: e => this.setState({ fbKind: e.currentTarget.dataset.k }),
@@ -1047,14 +1047,14 @@ class Component extends DCLogic {
     try {
       if (!(window.claude && window.claude.complete)) throw new Error('The assistant is not available in this preview.');
       const KBtext = this.KBROWS.filter(k => k.active !== false).sort((a, b) => (a.order || 0) - (b.order || 0)).map(k => '## ' + k.title + '\n' + k.body).join('\n\n');
-      const system = `You are the W5 Engineering shaker-selection assistant, helping a salesperson during a live customer call about LDS electrodynamic shaker systems. Be brief (under 120 words unless asked), plain-spoken, and practical: give the answer, then what to say or ask next. Answer in plain text only — no markdown, no asterisks, no headings; short paragraphs or simple "- " bullets. The customer's shock pulse (peak g and duration) is given in the live call section; the "2 ms" in the knowledge base is only the datasheet rating assumption — never describe the customer's pulse as 2 ms unless it is. Use the knowledge base first; when a question is outside it, say so and recommend looping in a W5 shaker SME (${this.GE.feedbackEmail || 'W5 shaker support'}). Never invent ratings — use the lookup_system tool for library numbers. Do not give prices.
+      const system = `You are the W5 Engineering shaker-selection assistant, helping a salesperson during a live customer call about LDS electrodynamic shaker systems. Be brief (under 120 words unless asked), plain-spoken, and practical: give the answer, then what to say or ask next. Answer in plain text only — no markdown, no asterisks, no headings; short paragraphs or simple "- " bullets. The customer's shock pulse (peak g and duration) is given in the live call section; the "2 ms" in the knowledge base is only the datasheet rating assumption — never describe the customer's pulse as 2 ms unless it is. Use the knowledge base first; when a question is outside it, say so and recommend looping in a W5 shaker SME ${this.GE.feedbackEmail ? '(' + this.GE.feedbackEmail + ')' : ''}. Never invent ratings — use the lookup_system tool for library numbers. Do not give prices.
 
 ## Knowledge base
 ${KBtext || '(empty)'}
 
 ## Current call (live)
 ${callSummary}`;
-      const tools = [{ name: 'lookup_system', description: 'Look up LDS shaker system ratings from the W5 library. Pass a shaker name or fragment like "V875" or "V780 / HPAK". Returns matching systems with force, stroke, velocity, accel, armature weight, frequency range.',
+      const tools = [{ name: 'lookup_system', description: 'Look up LDS shaker system ratings from the W5 library. Pass a shaker model or system name (or part of one). Returns matching systems with force, stroke, velocity, accel, armature weight, frequency range.',
         input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
         run: async ({ query }) => { const qq = String(query || '').toLowerCase(); const hits = this.SYS.filter(s => s.name.toLowerCase().includes(qq) || s.shaker.toLowerCase().includes(qq)).slice(0, 8); const lbl = s => `${s.name}: sine force ${s.sine ?? 'n/a'} lbf pk; random force ${s.random ?? 'not rated'} lbf rms; half-sine shock force ${s.shock ?? 'not rated'} lbf pk; stroke ${s.disp ?? 'n/a'} in pk-pk; max sine velocity ${s.vel ?? 'n/a'} in/s pk; shock velocity ${s.shockVel ?? 'same as sine velocity'}; bare-table sine accel ${s.sineAcc ?? 'n/a'} g pk; bare-table random accel ${s.randAcc ?? 'n/a'} Grms; armature weight ${s.arm} lb; static load support ${s.load ?? 'n/a'} lb; frequency ${s.fmin}–${s.fmax} Hz; armature dia ${s.dia ?? 'n/a'} in; ${this.singlePhase && this.singlePhase(s) ? 'single-phase power' : '3-phase power'}; lead ${this.leadWeeks && this.leadWeeks(s) ? this.leadWeeks(s).join('–') + ' wk' : 'confirm with HBK'}; source ${s.src}${s.notes ? '; note: ' + s.notes : ''}`;
           return hits.length ? hits.map(lbl).join('\n') : 'No matching system in the library.'; } }];

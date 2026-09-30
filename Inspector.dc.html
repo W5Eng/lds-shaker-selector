@@ -94,7 +94,7 @@ class Component extends DCLogic {
     const total = R.reduce((n, c) => n + c.items.filter(i => i.severity !== 'note').length, 0);
     return {
       cards, scanLabel: S.scanning ? 'Scanning…' : 'Re-scan', copyMsg: S.copyMsg,
-      summary: S.results ? (window.DB.connected() ? `${total} violation(s) across ${R.length} cards · database v${(window.DB.data() || {}).version ?? '—'}` : `${total} violation(s) · database not connected — data scanners ran on an empty document; connect it in the Workbench for a full scan.`) : 'Scanning registered files…',
+      summary: S.results ? (window.DB.connected() && !window.DB.data() ? `${total} violation(s) · database did not load (${window.DB.error() || 'unknown error'}) — data scanners ran on an empty document.` : window.DB.connected() ? `${total} violation(s) across ${R.length} cards · database v${(window.DB.data() || {}).version ?? '—'}` : `${total} violation(s) · database not connected — data scanners ran on an empty document; connect it in the Workbench for a full scan.`) : 'Scanning registered files…',
       rescan: () => this.scan(),
       copyReq: e => navigator.clipboard.writeText(e.currentTarget.dataset.req).then(() => this.setState({ copyMsg: 'Fix request copied — paste it to Claude in a new chat.' }))
     };
