@@ -216,18 +216,21 @@
             <span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-size:16px">Publish files to GitHub</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a93a0;overflow-wrap:anywhere">{{ pub.repo }} · {{ pub.branch }} · <span style="color:{{ pub.tokCol }}">{{ pub.tok }}</span></span></span>
             <span style="display:flex;gap:8px;flex-wrap:wrap">
               <button onClick="{{ pubRefresh }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:36px;cursor:pointer;font-size:12px">↻ Refresh</button>
+              <button onClick="{{ pfCompare }}" style="border:1px solid #8ab4f8;background:#0f1216;color:#8ab4f8;border-radius:8px;padding:6px 10px;min-height:36px;cursor:pointer;font-size:12px;font-weight:500">{{ pfCmpLabel }}</button>
+              <sc-if value="{{ pfHasCmp }}"><button onClick="{{ pfTickDiff }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:36px;cursor:pointer;font-size:12px">{{ pfDiffLabel }}</button></sc-if>
               <button onClick="{{ pfAll }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:36px;cursor:pointer;font-size:12px">{{ pfAllLabel }}</button>
               <button onClick="{{ pfGo }}" style="border:0;background:{{ pfGoBg }};color:#0f1216;border-radius:8px;padding:8px 14px;min-height:36px;cursor:pointer;font-weight:600;font-size:13px">{{ pfGoLabel }}</button>
             </span>
           </div>
           <sc-if value="{{ pfNote }}"><div style="font-size:13px;color:#f2c46d">{{ pfNote }}</div></sc-if>
+          <sc-if value="{{ pfHasCmp }}"><div style="font-size:12px;color:#8a93a0">{{ pfCmpInfo }}</div></sc-if>
           <sc-for list="{{ pfRows }}" as="f" hint-placeholder-count="6">
             <div style="display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:10px 0;border-top:1px solid #20262e;align-items:start">
               <input type="checkbox" data-n="{{ f.name }}" checked="{{ f.on }}" onChange="{{ pfTick }}" style="width:18px;height:18px;margin-top:2px;cursor:pointer">
               <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
                 <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline">
                   <span style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;min-width:0"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:#e6e8eb;overflow-wrap:anywhere">{{ f.name }}</span><span style="font-size:12px;color:#8a93a0">{{ f.desc }}</span></span>
-                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ f.sizeCol }}">{{ f.size }}</span>
+                  <span style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><sc-if value="{{ f.hasLive }}"><span style="font-size:12px;font-weight:500;color:{{ f.liveCol }}">{{ f.live }}</span></sc-if><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ f.sizeCol }}">{{ f.size }}</span></span>
                 </div>
                 <textarea data-n="{{ f.name }}" value="{{ f.note }}" onInput="{{ pfNoteEdit }}" rows="1" placeholder="Release note" style="padding:6px 8px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;resize:vertical;font-size:13px;min-height:34px"></textarea>
                 <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px">
@@ -607,7 +610,8 @@ class Component extends DCLogic {
       pfTick: e => { const n = e.target.dataset.n, on = e.target.checked; this.setState(s => ({ pfSel: { ...(s.pfSel || {}), [n]: on } })); },
       pfAll: () => { const names = this.pfNames(), all = names.every(n => (S.pfSel || {})[n]); this.setState({ pfSel: Object.fromEntries(names.map(n => [n, !all])) }); },
       pfNoteEdit: e => { const n = e.target.dataset.n, v = e.target.value; this.setState(s => ({ pfEdit: { ...(s.pfEdit || {}), [n]: v } })); },
-      pfGo: () => this.pfGo(),
+      pfGo: () => this.pfGo(), pfCompare: () => this.pfCompare(),
+      pfTickDiff: () => { const c = S.pfCmp || {}; this.setState({ pfSel: Object.fromEntries(this.pfNames().map(n => [n, !!c[n] && ['differs', 'missing', 'preview'].includes(c[n].k)])) }); },
       releases: this.relView(db), noReleases: !this.relView(db).length,
       log: hist.map(l => ({ v: l.v, desc: l.desc, who: (l.who || '').split('@')[0], at: (l.at || '').slice(0, 16).replace('T', ' ') })), checkpoints: S.checkpoints.map(c => ({ id: c.id, label: c.label || '(no label)', v: c.v, at: (c.at || '').slice(0, 16).replace('T', ' ') })), cpLabel: S.cpLabel, logMsg: S.logMsg,
       onTab: e => { const t = e.currentTarget.dataset.t; this.setState({ tab: t, sel: null, chip: '' }); if (t === 'log') this.loadHistory(); if (t === 'publish' || t === 'platform' || t === 'feedback' || t === 'hbk') this.loadPublish(); },
@@ -666,7 +670,7 @@ class Component extends DCLogic {
     const out = {};
     await Promise.all(this.pfNames().map(async n => {
       const P = this.pfPaths(n, main), b = { size: null, note: '', builtAt: '' };
-      try { const r = await fetch(url(P.build), { cache: 'no-store' }); if (r.ok) { const buf = await r.arrayBuffer(); b.size = buf.byteLength; } } catch (e) {}
+      try { const r = await fetch(url(P.build), { cache: 'no-store' }); if (r.ok) { const buf = await r.arrayBuffer(); b.size = this.pfKind(n, main) === 'image' ? buf.byteLength : new TextEncoder().encode(this.stripPreview(new TextDecoder().decode(buf))).length; } } catch (e) {}
       try { const r = await fetch(url(P.notes), { cache: 'no-store' }); if (r.ok) { const j = JSON.parse(await r.text()); b.note = j.note || ''; b.builtAt = j.builtAt || ''; } } catch (e) {}
       out[n] = b;
     }));
@@ -679,12 +683,37 @@ class Component extends DCLogic {
       const b = B[n] || {}, r = res[n] || {}, edited = ed[n] != null;
       return { name: n, desc: this.pfKind(n, main), on: !!sel[n], size: B[n] ? (b.size == null ? 'not in ' + this.pfPaths(n, main).build.split('/')[0] + '/' : kb(b.size)) : '…', sizeCol: B[n] && b.size == null ? '#f28b82' : '#c5cad1',
         note: edited ? ed[n] : (b.note || ''), noteSrc: edited ? 'edited here (this send only)' : b.note ? 'from the build' + (b.builtAt ? ' (' + String(b.builtAt).slice(0, 16).replace('T', ' ') + ')' : '') : 'no note file beside the build',
-        res: r.text || '', resCol: r.ok ? '#8ee0a8' : r.busy ? '#c5cad1' : '#f28b82', url: r.url || '' };
+        res: r.text || '', resCol: r.ok ? '#8ee0a8' : r.busy ? '#c5cad1' : '#f28b82', url: r.url || '',
+        live: ((S.pfCmp || {})[n] || {}).t || '', liveCol: ((S.pfCmp || {})[n] || {}).c || '#8a93a0', hasLive: !!(S.pfCmp || {})[n] };
     });
     const n = rows.filter(x => x.on).length, busy = !!S.pfBusy;
-    return { pfRows: rows, pfGoLabel: busy ? 'Publishing…' : n ? 'Publish ' + n + ' file' + (n > 1 ? 's' : '') : 'Tick files to publish', pfGoBg: n && !busy ? '#8ab4f8' : '#4a5563',
+    const cmp = S.pfCmp || {}, nDiff = Object.keys(cmp).filter(k => ['differs', 'missing', 'preview'].includes(cmp[k].k)).length;
+    return { pfRows: rows, pfCmpLabel: S.pfCmpBusy ? 'Comparing…' : 'Compare with GitHub', pfHasCmp: !!S.pfCmpAt, pfDiffLabel: 'Tick the ones that differ (' + nDiff + ')', pfCmpInfo: S.pfCmpAt ? 'checked ' + S.pfCmpAt + ' · ' + Object.values(cmp).filter(x => x.k === 'same').length + ' same, ' + nDiff + ' differ · GitHub can take a few minutes to show a new publish' : '', pfGoLabel: busy ? 'Publishing…' : n ? 'Publish ' + n + ' file' + (n > 1 ? 's' : '') : 'Tick files to publish', pfGoBg: n && !busy ? '#8ab4f8' : '#4a5563',
       pfAllLabel: rows.length && rows.every(x => x.on) ? 'Untick all' : 'Tick all',
       pfNote: st.error ? 'Server: ' + st.error : st.ok === false ? (st.message || st.error) : !st.path ? 'Loading the file list from the server…' : !/claudeusercontent\.com$/.test(location.hostname) && rows.some(x => x.size.startsWith('not in')) ? 'Publishing reads the builds from the design project — open this Workbench in the design chat to publish. Here you can still compare and see releases.' : '' };
+  }
+  pfNorm(t) { return String(t).replace(/\r\n?/g, '\n').replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, 'ID').replace(/\s+/g, ' ').trim(); }
+  async pfCompare() {
+    const st = this.state.pubStatus || {}, main = st.path, site = st.site; if (!site || this.state.pfCmpBusy) return;
+    this.setState({ pfCmpBusy: true });
+    const enc = p => p.split('/').map(encodeURIComponent).join('/'), kb = n => n < 1024 ? n + ' B' : (n / 1024).toFixed(n < 10240 ? 1 : 0) + ' KB', now = Date.now();
+    const marker = new RegExp('<(style|script)\\b[^>]*' + 'data-omelette' + '-injected', 'i');
+    const out = {};
+    await Promise.all(this.pfNames().map(async n => {
+      const img = this.pfKind(n, main) === 'image', P = this.pfPaths(n, main);
+      let here = null, live = null, liveStatus = 0;
+      try { const r = await fetch(new URL(enc(P.build), document.baseURI), { cache: 'no-store' }); if (r.ok) here = await r.arrayBuffer(); } catch (e) {}
+      try { const r = await fetch(site + enc(n) + '?v=' + now, { cache: 'no-store' }); liveStatus = r.status; if (r.ok) live = await r.arrayBuffer(); } catch (e) { liveStatus = -1; }
+      if (!here) { out[n] = { k: 'nobuild', t: 'no build here', c: '#8a93a0' }; return; }
+      if (liveStatus === 404) { out[n] = { k: 'missing', t: 'not on GitHub yet — publish it', c: '#f2c46d' }; return; }
+      if (!live) { out[n] = { k: 'error', t: 'could not read GitHub' + (liveStatus > 0 ? ' (' + liveStatus + ')' : ''), c: '#f2c46d' }; return; }
+      if (img) { const a = new Uint8Array(here), b = new Uint8Array(live); const same = a.length === b.length && a.every((x, i) => x === b[i]); out[n] = same ? { k: 'same', t: '✓ same as live', c: '#8ee0a8' } : { k: 'differs', t: 'differs — this build is not live (' + kb(a.length) + ' here, ' + kb(b.length) + ' live)', c: '#f2c46d' }; return; }
+      const dec = new TextDecoder(), hT = dec.decode(here), lT = dec.decode(live), hadPrev = marker.test(lT);
+      const hS = this.stripPreview(hT), lS = this.stripPreview(lT);
+      if (hadPrev) { out[n] = { k: 'preview', t: 'live copy carries preview code — publish to clean it', c: '#f28b82' }; return; }
+      out[n] = this.pfNorm(hS) === this.pfNorm(lS) ? { k: 'same', t: '✓ same as live', c: '#8ee0a8' } : { k: 'differs', t: 'differs — this build is not live (' + kb(new TextEncoder().encode(hS).length) + ' here, ' + kb(live.byteLength) + ' live)', c: '#f2c46d' };
+    }));
+    this.setState({ pfCmp: out, pfCmpAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), pfCmpBusy: false });
   }
   async pfGo() {
     const S = this.state, st = S.pubStatus || {}, main = st.path, sel = S.pfSel || {}, names = this.pfNames().filter(n => sel[n]);
