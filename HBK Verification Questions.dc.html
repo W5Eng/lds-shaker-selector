@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./db-config.js"></script>
+<script src="./guard.js"></script>
+<script src="./db-client.js"></script>
+<script src="./hbk-questions.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#f5f4f1;-webkit-text-size-adjust:100%}*{box-sizing:border-box}input,select,textarea,button{font:inherit}a{color:#033e8a}a:hover{color:#022c63}</style>
+</helmet>
+<div style="min-height:100vh;background:#f5f4f1;color:#16191d;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.5;padding-bottom:60px">
+
+  <div style="background:#033e8a;color:#ffffff">
+    <div style="max-width:920px;margin:0 auto;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
+      <img src="./assets/w5-logo.png" alt="W5 Engineering" style="display:block;align-self:flex-start;height:28px;width:auto;max-width:100%;object-fit:contain;margin:2px 0 6px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:#c9d6ea">W5 ENGINEERING · LDS SHAKER SELECTOR · BETA 0.1</div>
+      <h1 style="margin:0;font-size:24px;line-height:1.2;font-weight:700;text-wrap:balance">Questions for HBK / LDS to fine-tune the sizing tool</h1>
+    </div>
+  </div>
+
+  <div style="max-width:920px;margin:0 auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px">
+
+    <sc-if value="{{ isLocked }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#e9f5ee;border:1px solid #a9d8bb;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-weight:700;font-size:17px;color:#14532d">Submitted — your answers are locked</div>
+            <div style="font-size:14px;color:#1f3d2b">{{ stamp.by }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#1f3d2b">{{ stamp.dates }}</div>
+          </div>
+          <button onClick="{{ startEdit }}" style="border:1px solid #033e8a;background:#ffffff;color:#033e8a;border-radius:10px;padding:10px 14px;min-height:44px;cursor:pointer;font-weight:600">Amend answers (documented)</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:#1f3d2b">
+          <span>Keep this link to view or amend later:</span>
+          <a href="{{ myLink }}" style="font-family:'IBM Plex Mono',monospace;font-size:12px;overflow-wrap:anywhere">{{ myLink }}</a>
+          <button onClick="{{ copyLink }}" style="border:1px solid #a9d8bb;background:#ffffff;border-radius:8px;padding:4px 10px;min-height:32px;cursor:pointer;font-size:12px">{{ copyLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff6e0;border:2px solid #e0a82e;border-radius:14px;padding:14px 16px;font-size:14px;color:#3a2a00">
+        <strong>Editing a submitted response.</strong> Change only what needs changing. Your name, the date and your reason are recorded next to every change, and the original answers are kept.
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showIntro }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:15px;color:#3b4047;text-wrap:pretty">W5 salespeople use this tool on customer calls to size LDS systems. Your answers tell us where its rules differ from how HBK engineers size a system. About 20 minutes. Skip anything you’re unsure of. Head expander and system <em>values</em> (weights, ratings) are in the separate Excel data check.</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#033e8a">{{ progress }}</div>
+      </div>
+    </sc-if>
+
+    <div style="background:#fdecea;border:2px solid #d9534f;border-radius:14px;padding:16px;display:flex;gap:12px;align-items:flex-start">
+      <span style="flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:#b3261e;color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:700">!</span>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="font-weight:700;font-size:16px;color:#7a1712">Your answers can change the tool’s recommendations</div>
+        <div style="font-size:14px;color:#3d0d0a;text-wrap:pretty">{{ warnText }}</div>
+      </div>
+    </div>
+
+    <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-weight:700;font-size:16px">About you</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px">
+        <sc-for list="{{ byFields }}" as="b" hint-placeholder-count="5">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600">
+            <span>{{ b.label }}</span>
+            <input name="{{ b.k }}" value="{{ b.v }}" onInput="{{ onBy }}" disabled="{{ b.ro }}" type="{{ b.type }}" placeholder="{{ b.ph }}" style="padding:10px 12px;border:1px solid #d8d5cf;border-radius:10px;background:{{ b.bg }};font-size:16px;font-weight:400;min-height:46px;color:#16191d">
+          </label>
+        </sc-for>
+      </div>
+    </div>
+
+    <sc-for list="{{ sections }}" as="s" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h2 style="margin:8px 0 0;font-size:18px;color:#033e8a;border-bottom:2px solid #033e8a;padding-bottom:4px">{{ s.code }} · {{ s.title }}</h2>
+        <sc-for list="{{ s.qs }}" as="q" hint-placeholder-count="3">
+          <div style="background:#ffffff;border:1px solid {{ q.bd }};border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#ffffff;background:#033e8a;border-radius:6px;padding:1px 7px">{{ q.id }}</span>
+              <span style="font-weight:700;font-size:16px">{{ q.title }}</span>
+              <sc-if value="{{ q.changed }}"><span style="font-size:12px;font-weight:600;color:#7a5200;background:#fff6e0;border-radius:999px;padding:2px 8px">edited</span></sc-if>
+            </div>
+            <div style="font-size:14px;color:#3b4047;text-wrap:pretty">{{ q.text }}</div>
+            <sc-if value="{{ q.hasOpts }}">
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="3">
+                  <button data-q="{{ o.q }}" data-v="{{ o.v }}" onClick="{{ onChoice }}" disabled="{{ o.ro }}" style="min-height:42px;padding:8px 14px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:14px;cursor:pointer;text-align:left">{{ o.v }}</button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ q.showVal }}">
+              <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600">
+                <span>{{ q.valLabel }}</span>
+                <input data-q="{{ q.id }}" value="{{ q.value }}" onInput="{{ onVal }}" disabled="{{ q.ro }}" style="padding:10px 12px;border:1px solid #d8d5cf;border-radius:10px;background:{{ q.inBg }};font-size:16px;font-weight:400;min-height:46px;color:#16191d">
+              </label>
+            </sc-if>
+            <sc-if value="{{ q.isTable }}">
+              <div style="display:flex;flex-direction:column;gap:0;border:1px solid #e4e2dd;border-radius:10px;overflow:hidden">
+                <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.2fr);gap:8px;padding:8px 12px;background:#eef3fa;font-size:12px;font-weight:700;color:#033e8a;text-transform:uppercase;letter-spacing:.04em">
+                  <span>Shaker family</span><span>Tool today (wk)</span><span>Correct value (wk)</span>
+                </div>
+                <sc-for list="{{ q.rows }}" as="r" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.2fr);gap:8px;padding:6px 12px;border-top:1px solid #efede9;align-items:center">
+                    <span style="font-weight:600;font-size:14px">{{ r.fam }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:{{ r.todayCol }}">{{ r.today }}</span>
+                    <input data-f="{{ r.fam }}" value="{{ r.v }}" onInput="{{ onLead }}" disabled="{{ r.ro }}" placeholder="e.g. 18–22" style="min-width:0;padding:8px 10px;border:1px solid #d8d5cf;border-radius:8px;background:{{ r.inBg }};font-size:16px;min-height:42px;color:#16191d">
+                  </div>
+                </sc-for>
+                <sc-if value="{{ q.noRows }}"><div style="padding:10px 12px;font-size:13px;color:#5a6069">The family list could not be loaded — please write lead times in the box below.</div></sc-if>
+              </div>
+            </sc-if>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600">
+              <span>{{ q.notesLabel }}</span>
+              <textarea data-q="{{ q.id }}" value="{{ q.notes }}" onInput="{{ onNotes }}" disabled="{{ q.ro }}" rows="{{ q.rowsN }}" style="padding:10px 12px;border:1px solid #d8d5cf;border-radius:10px;background:{{ q.inBg }};font-size:16px;font-weight:400;color:#16191d;resize:vertical"></textarea>
+            </label>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+
+    <sc-if value="{{ hasRevs }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-weight:700;font-size:16px">Edit history</div>
+        <sc-for list="{{ revs }}" as="v" hint-placeholder-count="1">
+          <div style="border-top:1px solid #efede9;padding-top:10px;display:flex;flex-direction:column;gap:4px">
+            <div style="font-size:14px"><strong>Edit #{{ v.n }}</strong> · {{ v.who }} · <span style="font-family:'IBM Plex Mono',monospace;font-size:12px">{{ v.at }}</span></div>
+            <div style="font-size:14px;color:#3b4047">Reason: {{ v.reason }}</div>
+            <sc-for list="{{ v.changes }}" as="c" hint-placeholder-count="1">
+              <div style="font-size:13px;color:#3b4047;overflow-wrap:anywhere"><strong>{{ c.q }}</strong>: <span style="text-decoration:line-through;color:#8a8f96">{{ c.from }}</span> → {{ c.to }}</div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isForm }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#ffffff;border:2px solid #033e8a;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px">
+          <input type="checkbox" checked="{{ ack }}" onChange="{{ onAck }}" style="width:22px;height:22px;flex:0 0 auto;margin-top:1px">
+          <span style="text-wrap:pretty">{{ ackText }}</span>
+        </label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button onClick="{{ submit }}" style="border:0;background:#033e8a;color:#ffffff;border-radius:12px;padding:12px 20px;min-height:48px;cursor:pointer;font-weight:700;font-size:15px">{{ submitLabel }}</button>
+          <span style="font-size:13px;color:#5a6069">Once submitted, answers are locked. Later edits need a written reason and are recorded.</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#ffffff;border:2px solid #e0a82e;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-weight:700;font-size:16px">Record this edit</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600"><span>Your name *</span>
+            <input name="name" value="{{ rev.name }}" onInput="{{ onRev }}" style="padding:10px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;font-weight:400;min-height:46px"></label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600"><span>Your email *</span>
+            <input name="email" type="email" value="{{ rev.email }}" onInput="{{ onRev }}" style="padding:10px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;font-weight:400;min-height:46px"></label>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600"><span>Reason for the change * <span style="font-weight:400;color:#5a6069">— e.g. “Datasheet rev. C changed the V850 shock rating.”</span></span>
+          <textarea name="reason" value="{{ rev.reason }}" onInput="{{ onRev }}" rows="3" style="padding:10px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;font-weight:400;resize:vertical"></textarea></label>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a5200">{{ editCount }}</div>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px">
+          <input type="checkbox" checked="{{ rev.ack }}" onChange="{{ onRevAck }}" style="width:22px;height:22px;flex:0 0 auto;margin-top:1px">
+          <span style="text-wrap:pretty">{{ ackText }}</span>
+        </label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button onClick="{{ submitEdit }}" style="border:0;background:#033e8a;color:#ffffff;border-radius:12px;padding:12px 20px;min-height:48px;cursor:pointer;font-weight:700">{{ editLabel }}</button>
+          <button onClick="{{ cancelEdit }}" style="border:1px solid #d8d5cf;background:#ffffff;border-radius:12px;padding:12px 16px;min-height:48px;cursor:pointer;font-weight:500">Cancel — keep the submitted answers</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasErr }}"><div style="background:#fdecea;border:1px solid #f1b0ab;border-radius:10px;padding:10px 12px;font-size:14px;color:#7a1712">{{ err }}</div></sc-if>
+
+    <div style="font-size:13px;color:#5a6069;border-top:1px solid #e4e2dd;padding-top:12px">Questions about this form: <a href="{{ contactHref }}">{{ contactText }}</a> · The tool: <a href="./">LDS Shaker Selector</a></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  DRAFT = 'lds.hbk.draft';
+  RECEIPT = 'lds.hbk.receipt';
+  ACK = 'I understand that these answers may change how the W5 sizing tool recommends LDS systems, that they will be verified by the W5 and HBK engineering teams before they are used, and that I am answering to the best of my knowledge.';
+  state = { mode: 'loading', by: {}, ans: {}, ack: false, resp: null, receipt: null, rev: { name: '', email: '', reason: '', ack: false }, busy: false, err: '', copied: false };
+  db = null;
+
+  componentDidMount() {
+    if (window.DB) { this.unsub = window.DB.subscribe(db => { this.db = db; this.forceUpdate(); }); window.DB.ready().catch(() => {}); }
+    const m = /[?&]r=([\w]+)\.([\w]+)/.exec(location.search);
+    let rc = m ? { id: m[1], key: m[2] } : null;
+    if (!rc) { try { rc = JSON.parse(localStorage.getItem(this.RECEIPT) || 'null'); } catch (e) {} }
+    if (rc && rc.id && rc.key && window.DB) {
+      window.DB.hbkGet(rc.id, rc.key).then(j => this.lockTo(j.response, rc)).catch(e => this.toForm(m ? e.message : ''));
+    } else this.toForm('');
+  }
+  componentWillUnmount() { if (this.unsub) this.unsub(); }
+  toForm(err) {
+    let d = {}; try { d = JSON.parse(localStorage.getItem(this.DRAFT) || '{}'); } catch (e) {}
+    this.setState({ mode: 'form', by: d.by || {}, ans: d.ans || {}, ack: false, err: err || '' });
+  }
+  lockTo(resp, rc) {
+    try { localStorage.setItem(this.RECEIPT, JSON.stringify(rc)); localStorage.removeItem(this.DRAFT); } catch (e) {}
+    this.setState({ mode: 'locked', resp, receipt: rc, by: { ...resp.by }, ans: JSON.parse(JSON.stringify(resp.answers || {})), err: '', busy: false });
+  }
+  componentDidUpdate() {
+    if (this.state.mode === 'form') { try { localStorage.setItem(this.DRAFT, JSON.stringify({ by: this.state.by, ans: this.state.ans })); } catch (e) {} }
+  }
+  setAns(q, patch) { this.setState(s => ({ ans: { ...s.ans, [q]: { ...(s.ans[q] || {}), ...patch } } })); }
+  clean(ans) { const o = {}; Object.keys(ans).forEach(k => { const a = ans[k] || {}; const x = {}; ['choice', 'value', 'notes'].forEach(f => { if (a[f] && String(a[f]).trim()) x[f] = String(a[f]).trim(); }); if (a.rows) { const r = {}; Object.keys(a.rows).forEach(f => { if (a.rows[f] && String(a.rows[f]).trim()) r[f] = String(a.rows[f]).trim(); }); if (Object.keys(r).length) x.rows = r; } if (Object.keys(x).length) o[k] = x; }); return o; }
+  when(iso) { if (!iso) return '—'; const d = new Date(iso); return d.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }); }
+  specialist() { const l = ((this.db && this.db.links) || []).find(x => x.topic === 'specialist' && /^mailto:/i.test(x.url || '')); return l ? { label: l.label, email: l.url.replace(/^mailto:/i, '').split('?')[0] } : null; }
+
+  async submit() {
+    const S = this.state, b = S.by;
+    if (!b.name || !b.company || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(b.email || '')) { this.setState({ err: 'Please fill in your name, company and email at the top.' }); window.scrollTo({ top: 0 }); return; }
+    if (!S.ack) { this.setState({ err: 'Please tick the accuracy statement before submitting.' }); return; }
+    if (!Object.keys(this.clean(S.ans)).length) { this.setState({ err: 'Please answer at least one question.' }); return; }
+    if (!window.confirm('Submit your answers? They will be locked. Any later change needs a written reason and is recorded with your name and date.')) return;
+    this.setState({ busy: true, err: '' });
+    try {
+      const j = await window.DB.hbkSubmit({ by: b, answers: this.clean(S.ans), ack: true, ackText: this.ACK, page: { url: location.href.split('?')[0], build: (window.DB_CONFIG || {}).appVersion || '' } });
+      this.lockTo(j.response, { id: j.id, key: j.key });
+      window.scrollTo({ top: 0 });
+    } catch (e) { this.setState({ busy: false, err: 'Not submitted: ' + e.message + ' Your answers are still here — please try again.' }); }
+  }
+  async submitEdit() {
+    const S = this.state, r = S.rev;
+    if (!r.name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.email || '')) { this.setState({ err: 'Enter your name and email to record the edit.' }); return; }
+    if ((r.reason || '').trim().length < 15) { this.setState({ err: 'Please write the reason for the change (at least a sentence).' }); return; }
+    if (!r.ack) { this.setState({ err: 'Please tick the accuracy statement.' }); return; }
+    if (!this.changedIds().length) { this.setState({ err: 'Nothing has changed yet.' }); return; }
+    this.setState({ busy: true, err: '' });
+    try {
+      const j = await window.DB.hbkRevise({ id: S.receipt.id, key: S.receipt.key, by: { name: r.name, email: r.email }, reason: r.reason, ack: true, ackText: this.ACK, answers: this.clean(S.ans) });
+      this.setState({ rev: { name: '', email: '', reason: '', ack: false } });
+      this.lockTo(j.response, S.receipt); window.scrollTo({ top: 0 });
+    } catch (e) { this.setState({ busy: false, err: 'Edit not recorded: ' + e.message }); }
+  }
+  changedIds() {
+    const S = this.state; if (!S.resp) return [];
+    const a = this.clean(S.ans), b = S.resp.answers || {}, keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+    return [...keys].filter(k => JSON.stringify(a[k] || null) !== JSON.stringify(b[k] || null));
+  }
+
+  renderVals() {
+    const S = this.state, db = this.db || {}, Q = window.HBKQ;
+    const ro = S.mode === 'locked' || S.mode === 'loading' || S.busy;
+    const changed = S.mode === 'editing' ? new Set(this.changedIds()) : new Set();
+    const fams = Q ? Q.families(db) : [];
+    const inBg = ro ? '#f3f2ef' : '#fbfaf8';
+    let total = 0, answered = 0;
+    const sections = (Q ? Q.list(db) : []).map(sec => ({ code: sec.code, title: sec.title, qs: sec.qs.map(q => {
+      total++; const a = S.ans[q.id] || {}; if (this.clean({ x: a }).x) answered++;
+      const opts = (q.opts || []).map(v => { const on = a.choice === v; return { q: q.id, v, ro, bg: on ? '#033e8a' : '#ffffff', fg: on ? '#ffffff' : '#16191d', bd: on ? '#033e8a' : '#d8d5cf' }; });
+      const rows = q.table === 'lead' ? fams.map(f => ({ fam: f.fam, today: f.today, todayCol: f.today === 'not set' ? '#b06a00' : '#3b4047', v: (a.rows || {})[f.fam] || '', ro, inBg })) : [];
+      return { id: q.id, title: q.title, text: q.text, hasOpts: opts.length > 0, opts, ro, inBg,
+        showVal: !!q.val && !!a.choice && a.choice !== 'Agree', valLabel: q.val || '', value: a.value || '',
+        isTable: q.table === 'lead', rows, noRows: q.table === 'lead' && !rows.length,
+        notesLabel: opts.length || q.table ? 'Notes (optional)' : 'Your answer', notes: a.notes || '', rowsN: opts.length || q.table ? 2 : 3,
+        changed: changed.has(q.id), bd: changed.has(q.id) ? '#e0a82e' : '#e4e2dd' };
+    }) }));
+    const by = S.by || {};
+    const bf = [['name', 'Name *', 'text', ''], ['email', 'Email *', 'email', 'name@hbkworld.com'], ['company', 'Company *', 'text', 'HBK'], ['role', 'Role / title', 'text', 'e.g. Applications engineer'], ['phone', 'Phone (optional)', 'tel', '']];
+    const byRo = S.mode !== 'form' || S.busy;
+    const resp = S.resp, sp = this.specialist();
+    const revs = ((resp && resp.revisions) || []).slice().reverse().map(v => ({ n: String(v.n), who: `${v.by.name} <${v.by.email}>`, at: this.when(v.at), reason: v.reason, changes: (v.changes || []).map(c => ({ q: c.q, from: c.from, to: c.to })) }));
+    const link = S.receipt ? location.origin + location.pathname + '?r=' + S.receipt.id + '.' + S.receipt.key : '';
+    const nChg = changed.size;
+    return {
+      isLocked: S.mode === 'locked', isEditing: S.mode === 'editing', isForm: S.mode === 'form', showIntro: S.mode !== 'locked',
+      progress: S.mode === 'loading' ? 'Loading…' : `${answered} of ${total} questions answered`,
+      warnText: 'Answers are not applied automatically. W5 and HBK engineering verify every answer before it changes the tool, because a wrong rule or value could lead to an undersized or oversized system for a customer. Once you submit, your response is locked and time-stamped; any later edit needs a written reason and is recorded with your name and date, and the original answers are kept.',
+      stamp: resp ? { by: `${resp.by.name}${resp.by.role ? ', ' + resp.by.role : ''} · ${resp.by.company} · ${resp.by.email}`, dates: `Submitted ${this.when(resp.at)} · Last updated ${this.when(resp.updatedAt)} · Ref ${resp.id}${(resp.revisions || []).length ? ` · ${resp.revisions.length} documented edit(s)` : ''}` } : { by: '', dates: '' },
+      myLink: link, copyLabel: S.copied ? 'Copied' : 'Copy link',
+      byFields: bf.map(([k, label, type, ph]) => ({ k, label, type, ph, v: by[k] || '', ro: byRo, bg: byRo ? '#f3f2ef' : '#fbfaf8' })),
+      sections, revs, hasRevs: revs.length > 0,
+      ack: !!S.ack, ackText: this.ACK, submitLabel: S.busy ? 'Submitting…' : 'Submit answers',
+      rev: S.rev, editCount: nChg ? `${nChg} question(s) changed: ${[...changed].join(', ')}` : 'No changes yet — edit the answers above.', editLabel: S.busy ? 'Saving…' : 'Submit documented edit',
+      hasErr: !!S.err, err: S.err,
+      contactHref: sp ? 'mailto:' + sp.email : 'https://www.w5engineering.com/contact-us', contactText: sp ? `${sp.label} — ${sp.email}` : 'W5 Engineering',
+      onBy: e => { const k = e.target.name, v = e.target.value; this.setState(s => ({ by: { ...s.by, [k]: v } })); },
+      onChoice: e => { if (ro) return; const { q, v } = e.currentTarget.dataset; const cur = (S.ans[q] || {}).choice; this.setAns(q, { choice: cur === v ? '' : v }); },
+      onVal: e => this.setAns(e.target.dataset.q, { value: e.target.value }),
+      onNotes: e => this.setAns(e.target.dataset.q, { notes: e.target.value }),
+      onLead: e => { const f = e.target.dataset.f, v = e.target.value; this.setState(s => { const a = s.ans.B3 || {}; return { ans: { ...s.ans, B3: { ...a, rows: { ...(a.rows || {}), [f]: v } } } }; }); },
+      onAck: e => this.setState({ ack: e.target.checked }),
+      submit: () => this.submit(),
+      startEdit: () => this.setState({ mode: 'editing', err: '', rev: { name: (S.resp && S.resp.by.name) || '', email: (S.resp && S.resp.by.email) || '', reason: '', ack: false } }),
+      cancelEdit: () => this.lockTo(S.resp, S.receipt),
+      onRev: e => { const k = e.target.name, v = e.target.value; this.setState(s => ({ rev: { ...s.rev, [k]: v } })); },
+      onRevAck: e => { const v = e.target.checked; this.setState(s => ({ rev: { ...s.rev, ack: v } })); },
+      submitEdit: () => this.submitEdit(),
+      copyLink: () => { (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(() => { this.setState({ copied: true }); setTimeout(() => this.setState({ copied: false }), 1500); }).catch(() => window.prompt('Copy this link:', link)); }
+    };
+  }
+}
+</script>
+</body>
+</html>
