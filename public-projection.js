@@ -10,7 +10,7 @@
     out.links = db.links || [];
     var ge = db.generalExtras || {};
     out.generalExtras = { headroom: ge.headroom, sigma: ge.sigma, betaLabel: ge.betaLabel, appVersion: ge.appVersion };
-    if (audience === 'staff') { out.feedback = db.feedback || []; out.releases = db.releases || []; out.generalExtras = ge; }
+    if (audience === 'staff') { out.feedback = db.feedback || []; out.hbkAnswers = db.hbkAnswers || []; out.generalExtras = ge; }
     return out;
   }
   if (typeof module !== 'undefined') module.exports = { project: project };
