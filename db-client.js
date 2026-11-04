@@ -15,6 +15,15 @@
       .then(function (r) { return r.text(); })
       .then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { throw new Error('Server returned non-JSON (check deployment access)'); } if (j.error) throw new Error(j.error); return j; });
   }
+  // Publish calls: return the server's reply as-is ({ok:false,error,message} included) so the page can show it. Non-JSON → err.nonJson (retryable).
+  function callRaw(endpoint, body) {
+    if (!endpoint) return Promise.reject(new Error('Database not connected — open the Workbench → Connect.'));
+    if (state.idToken) body.idToken = state.idToken;
+    if (state.ticket) body.ticket = state.ticket;
+    return fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), redirect: 'follow' })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { try { return JSON.parse(t); } catch (e) { var er = new Error('The server’s front end did not answer with data.'); er.nonJson = true; throw er; } });
+  }
   function emit() { state.subs.forEach(function (f) { try { f(state.db, state); } catch (e) { console.error(e); } }); }
   function readCache() { try { return JSON.parse(localStorage.getItem(CACHE)); } catch (e) { return null; } }
   function writeCache(db) { try { localStorage.setItem(CACHE, JSON.stringify(db)); } catch (e) {} }
@@ -76,11 +85,11 @@
     activate: function (id) { return call(cfg.admin, { action: 'activate', id: id }).then(function (j) { state.db = j.db; writeCache(j.db); emit(); return j.db; }); },
     seed: function (doc) { return call(cfg.admin, { action: 'seed', doc: doc }).then(function (j) { state.db = j.db; writeCache(j.db); emit(); return j.db; }); },
     publishStatus: function (fresh) { return call(cfg.admin, { action: 'publish-status', fresh: !!fresh }); },
-    publishFile: function (target, content, note, confirmSmall) { return call(cfg.admin, { action: 'publish-file', target: target, content: content, note: note, confirmSmall: !!confirmSmall }); },
-    publishFileB64: function (target, b64, note, confirmSmall) { return call(cfg.admin, { action: 'publish-file', target: target, contentB64: b64, note: note, confirmSmall: !!confirmSmall }); },
-    publishViewer: function (html, note, confirmSmall) { return call(cfg.admin, { action: 'publish-viewer', html: html, note: note, confirmSmall: !!confirmSmall }); },
-    releaseRecord: function (target, content, note) { return call(cfg.admin, { action: 'release-record', target: target, content: content, note: note }); },
-    releaseGet: function (id) { return call(cfg.admin, { action: 'release-get', id: id }); },
+    publishFile: function (target, content, note, confirmSmall) { return callRaw(cfg.admin, { action: 'publish-file', target: target, content: content, note: note, confirmSmall: !!confirmSmall }); },
+    publishFileB64: function (target, b64, note, confirmSmall) { return callRaw(cfg.admin, { action: 'publish-file', target: target, contentB64: b64, note: note, confirmSmall: !!confirmSmall }); },
+    publishViewer: function (html, note, confirmSmall) { return callRaw(cfg.admin, { action: 'publish-viewer', html: html, note: note, confirmSmall: !!confirmSmall }); },
+    releaseRecord: function (target, content, note) { return callRaw(cfg.admin, { action: 'release-record', target: target, content: content, note: note }); },
+    releaseGet: function (id) { return callRaw(cfg.admin, { action: 'release-get', id: id }); },
     publishPage: function (html, note) { return call(cfg.admin, { action: 'publish-viewer', html: html, note: note }); },
     publishRevert: function (id, note) { return call(cfg.admin, { action: 'publish-revert', id: id, note: note }); },
     feedback: function (fb) { return call(cfg.read || cfg.admin, { action: 'feedback', feedback: fb }); },
