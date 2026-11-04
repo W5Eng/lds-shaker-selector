@@ -1,43 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./db-config.js"></script>
+<script src="./guard.js"></script>
+<script src="./db-client.js"></script>
 <script src="./support.js"></script>
+<title>LDS Shaker Selector — W5 Engineering</title>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#16191d"/><text x="50" y="62" font-family="Helvetica,Arial,sans-serif" font-size="34" font-weight="700" fill="#8ab4f8" text-anchor="middle">LDS</text></svg></template>
 </head>
 <body>
 <x-dc>
 <helmet>
-<script src="./db-config.js"></script>
-<script src="./guard.js"></script>
-<script src="./db-client.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#f5f4f1;-webkit-text-size-adjust:100%}
 *{box-sizing:border-box}
-a{color:oklch(0.5 0.14 252)}
-a:hover{color:oklch(0.42 0.14 252)}
+a{color:#033e8a}
+a:hover{color:#022c63}
 input,select,textarea,button{font:inherit}
 </style>
 </helmet>
 <div style="min-height:100vh;background:#f5f4f1;color:#16191d;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.45;padding-bottom:120px">
 
-<div style="background:#16191d;color:#f3f4f5">
+<div style="background:#033e8a;color:#ffffff">
   <div style="max-width:1240px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <div style="flex:1 1 auto;min-width:180px;display:flex;flex-direction:column">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">W5 Engineering · LDS</div>
-      <div style="font-weight:600;font-size:17px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">Shaker Selector <span style="font-weight:400;color:#a9b0b8">· sales call guide</span><sc-if value="{{ hasBetaLabel }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:999px;background:oklch(0.78 0.12 252);color:#16191d">{{ betaLabel }}</span></sc-if></div>
+    <img src="./assets/w5-logo.png" alt="W5 Engineering" style="display:block;align-self:flex-start;height:30px;width:auto;max-width:100%;object-fit:contain;margin:2px 0 8px"><div style="flex:1 1 auto;min-width:180px;display:flex;flex-direction:column">
+      
+      <div style="font-weight:600;font-size:17px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">LDS Shaker Selector <span style="font-weight:400;color:#c9d6ea">· sales call guide</span><sc-if value="{{ hasBetaLabel }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:999px;background:oklch(0.78 0.12 252);color:#16191d">{{ betaLabel }}</span></sc-if></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div style="display:flex;border:1px solid #3a4048;border-radius:999px;padding:2px">
+      <div style="display:flex;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:2px">
         <sc-for list="{{ unitOpts }}" as="u" hint-placeholder-count="2">
           <button data-v="{{ u.val }}" onClick="{{ onUnit }}" style="border:0;border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;background:{{ u.bg }};color:{{ u.fg }};font-size:13px;font-weight:500">{{ u.label }}</button>
         </sc-for>
       </div>
-      <button onClick="{{ toggleCore }}" style="border:1px solid #3a4048;border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;background:{{ coreBg }};color:#f3f4f5;font-size:13px">{{ coreLabel }}</button>
+      <button onClick="{{ toggleCore }}" style="border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;background:{{ coreBg }};color:#f3f4f5;font-size:13px">{{ coreLabel }}</button>
       <sc-if value="{{ isBeta }}"><button onClick="{{ toggleFb }}" style="border:1px solid oklch(0.78 0.12 252);border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;background:transparent;color:oklch(0.85 0.1 252);font-size:13px">Feedback</button></sc-if>
-      <button onClick="{{ newCall }}" style="border:1px solid #3a4048;border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;background:transparent;color:#f3f4f5;font-size:13px">New call</button>
+      <button onClick="{{ newCall }}" style="border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;background:transparent;color:#f3f4f5;font-size:13px">New call</button>
     </div>
   </div>
 </div>
@@ -62,52 +66,54 @@ input,select,textarea,button{font:inherit}
       <p style="margin:0;color:#5a6069;font-size:15px;text-wrap:pretty">{{ cur.goal }}</p>
     </div>
 
-    <div style="background:#1c2127;color:#eef0f2;border-radius:14px;overflow:hidden">
-      <button onClick="{{ toggleCoach }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:transparent;border:0;color:#eef0f2;cursor:pointer;text-align:left;gap:12px;min-height:48px">
-        <span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="width:8px;height:8px;border-radius:50%;background:oklch(0.78 0.12 252)"></span>
-          <span style="font-weight:600">Call coach</span>
-          <span style="color:#a9b0b8;font-size:13px">What to ask, and why</span>
+    <div data-fb-area="coach" style="background:#ffffff;color:#16191d;border:1px solid #c9d6ea;border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(3,62,138,.14)">
+      <button onClick="{{ toggleCoach }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#033e8a;border:0;color:#ffffff;cursor:pointer;text-align:left;gap:12px;min-height:50px">
+        <span style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:16px;letter-spacing:.01em">Call coach</span>
+          <span style="color:#c9d6ea;font-size:13px">What to ask, and why</span>
         </span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#a9b0b8">{{ coachToggle }}</span>
+        <span style="font-size:13px;font-weight:600;color:#033e8a;background:#ffffff;border-radius:999px;padding:4px 12px">{{ coachToggle }}</span>
       </button>
       <sc-if value="{{ coachOpen }}" hint-placeholder-val="{{ true }}">
-        <div style="padding:0 16px 18px;display:flex;flex-direction:column;gap:16px">
+        <div style="padding:16px;display:flex;flex-direction:column;gap:18px">
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">Say it like this</div>
+            <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#033e8a">Ask the customer</div>
             <sc-for list="{{ coachSay }}" as="s" hint-placeholder-count="3">
-              <div style="display:flex;gap:12px;align-items:baseline">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:oklch(0.78 0.12 252);flex:0 0 auto">{{ s.n }}</span>
-                <span style="font-size:16px;line-height:1.45;text-wrap:pretty">{{ s.t }}</span>
+              <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:#eef3fa;border-radius:12px">
+                <span style="flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:#033e8a;color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">{{ s.n }}</span>
+                <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                  <span style="font-size:18px;line-height:1.4;font-weight:600;color:#0b1f3a;text-wrap:pretty">{{ s.q }}</span>
+                  <sc-if value="{{ s.hasRest }}"><span style="font-size:14px;color:#3b4047;text-wrap:pretty">{{ s.rest }}</span></sc-if>
+                </span>
               </div>
             </sc-for>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">Why it matters</div>
-            <div style="font-size:14px;color:#d3d7dc;text-wrap:pretty">{{ cur.why }}</div>
-          </div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#a9b0b8">Listen for</div>
+            <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#033e8a">Listen for → offer</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px">
               <sc-for list="{{ coachListen }}" as="l" hint-placeholder-count="3">
-                <div style="display:flex;flex-direction:column;gap:2px;padding:8px 12px;border:1px solid #394049;border-radius:10px;flex:1 1 200px">
-                  <span style="font-size:13px;color:#eef0f2">{{ l.cue }}</span>
-                  <span style="font-size:12px;color:oklch(0.8 0.1 252);font-family:'IBM Plex Mono',monospace">→ {{ l.opp }}</span>
+                <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid #d8d5cf;border-radius:12px;flex:1 1 200px;background:#ffffff">
+                  <span style="font-size: 14px; color: #16191d; font-weight: 500; width: 100%; height: 100%">“{{ l.cue }}”</span>
+                  <span style="align-self: flex-start; font-size: 13px; font-weight: 600; color: #ffffff; background: #033e8a; border-radius: 999px; padding: 3px 10px; height: 100%; width: 100%">→ {{ l.opp }}</span>
                 </div>
               </sc-for>
             </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:#fff6e0;border:1px solid #f0d99a;border-radius:12px">
+            <span style="flex:0 0 auto;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7a5200;padding-top:2px">Why</span>
+            <span style="font-size:14px;color:#3a2a00;line-height:1.5;text-wrap:pretty">{{ cur.why }}</span>
           </div>
         </div>
       </sc-if>
     </div>
 
     <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
-      <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-wrap:wrap;gap:20px 16px">
+      <div data-fb-area="questions" style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-wrap:wrap;gap:20px 16px">
         <sc-for list="{{ questions }}" as="q" hint-placeholder-count="5">
-          <div style="flex:{{ q.basis }};min-width:0;display:flex;flex-direction:column;gap:6px">
+          <div data-fb-q="{{ q.label }}" style="flex:{{ q.basis }};min-width:0;display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap">
               <span style="font-weight:600;font-size:14px">{{ q.label }}</span>
-              <sc-if value="{{ q.core }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(0.5 0.14 252)">CORE</span></sc-if>
+              <sc-if value="{{ q.core }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#033e8a">CORE</span></sc-if>
             </div>
             <sc-if value="{{ q.hasHint }}"><div style="font-size:13px;color:#5a6069;text-wrap:pretty">{{ q.hint }}</div></sc-if>
             <sc-if value="{{ q.isText }}">
@@ -126,7 +132,7 @@ input,select,textarea,button{font:inherit}
                   <span style="display:flex;align-items:center;padding:0 12px;color:#5a6069;font-size:13px;font-family:'IBM Plex Mono',monospace;border-left:1px solid #e4e2dd">{{ q.unit }}</span>
                 </div>
                 <sc-if value="{{ q.hasAction }}">
-                  <button data-a="{{ q.action }}" onClick="{{ onAction }}" style="border:1px solid oklch(0.5 0.14 252);color:oklch(0.5 0.14 252);background:#ffffff;border-radius:10px;padding:0 12px;min-height:46px;cursor:pointer;font-size:13px;font-weight:500">{{ q.actionLabel }}</button>
+                  <button data-a="{{ q.action }}" onClick="{{ onAction }}" style="border:1px solid #033e8a;color:#033e8a;background:#ffffff;border-radius:10px;padding:0 12px;min-height:46px;cursor:pointer;font-size:13px;font-weight:500">{{ q.actionLabel }}</button>
                 </sc-if>
               </div>
             </sc-if>
@@ -147,8 +153,35 @@ input,select,textarea,button{font:inherit}
       </div>
     </sc-if>
 
+    <sc-if value="{{ he.show }}" hint-placeholder-val="{{ false }}">
+      <div data-fb-area="head-expander" style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="font-weight:600;font-size:16px">Choose a head expander</div>
+            <div style="font-size:13px;color:#5a6069">Standard sizes for {{ he.shaker }}. Its weight is added to the moving mass.</div>
+          </div>
+          <span style="padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;background:{{ he.needBg }};color:{{ he.needFg }}">{{ he.need }}</span>
+        </div>
+        <sc-if value="{{ he.hasMsg }}"><div style="font-size:14px;color:#3b4047;background:#fff6e0;border:1px solid #f0d99a;border-radius:10px;padding:10px 12px;text-wrap:pretty">{{ he.msg }}</div></sc-if>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:10px">
+          <sc-for list="{{ he.cards }}" as="c" hint-placeholder-count="3">
+            <button data-he="{{ c.name }}" onClick="{{ onHe }}" style="text-align:left;display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;border:2px solid {{ c.bd }};background:{{ c.bg }};cursor:pointer;color:#16191d;min-height:44px">
+              <span style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
+                <span style="font-weight:700;font-size:16px">{{ c.size }}</span>
+                <span style="font-size:12px;font-weight:600;color:{{ c.selFg }}">{{ c.sel }}</span>
+              </span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3b4047">{{ c.specs }}</span>
+              <sc-for list="{{ c.checks }}" as="k" hint-placeholder-count="2">
+                <span style="font-size:13px;color:{{ k.col }}">{{ k.t }}</span>
+              </sc-for>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
     <sc-if value="{{ showProfile }}">
-      <div style="display:flex;flex-direction:column;gap:16px">
+      <div data-fb-area="profile" style="display:flex;flex-direction:column;gap:16px">
         <sc-if value="{{ noTypes }}">
           <div style="background:#ffffff;border:1px dashed #cfccc5;border-radius:14px;padding:18px 16px;color:#5a6069;font-size:14px">Pick the test types above — level entry for sine, random and shock appears here.</div>
         </sc-if>
@@ -180,7 +213,7 @@ input,select,textarea,button{font:inherit}
               </div>
             </sc-for>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #efede9;padding-top:12px">
-              <button data-t="sine" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:oklch(0.5 0.14 252);cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add segment</button>
+              <button data-t="sine" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:#033e8a;cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add segment</button>
               <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500">{{ sineSum }}</div>
             </div>
           </div>
@@ -212,7 +245,7 @@ input,select,textarea,button{font:inherit}
             </sc-for>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #efede9;padding-top:12px">
               <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-                <button data-t="psd" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:oklch(0.5 0.14 252);cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add breakpoint</button>
+                <button data-t="psd" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:#033e8a;cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add breakpoint</button>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a6069">Level offset
                   <input name="dB" value="{{ dB }}" onInput="{{ onField }}" inputmode="decimal" placeholder="0" style="width:64px;padding:6px 8px;border:1px solid #d8d5cf;border-radius:8px;background:#fbfaf8;font-size:16px;font-family:'IBM Plex Mono',monospace">dB
                 </label>
@@ -248,7 +281,7 @@ input,select,textarea,button{font:inherit}
               </div>
             </sc-for>
             <div style="border-top:1px solid #efede9;padding-top:12px">
-              <button data-t="shock" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:oklch(0.5 0.14 252);cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add pulse</button>
+              <button data-t="shock" onClick="{{ onRowAdd }}" style="border:0;background:transparent;color:#033e8a;cursor:pointer;font-weight:500;padding:6px 0;min-height:40px">+ Add pulse</button>
             </div>
           </div>
         </sc-if>
@@ -256,12 +289,12 @@ input,select,textarea,button{font:inherit}
     </sc-if>
 
     <sc-if value="{{ showRec }}">
-      <div style="display:flex;flex-direction:column;gap:16px">
+      <div data-fb-area="recommendation" style="display:flex;flex-direction:column;gap:16px">
         <sc-if value="{{ rec.empty }}">
           <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:20px 16px;display:flex;flex-direction:column;gap:10px;align-items:flex-start">
             <div style="font-weight:600;font-size:16px">No test levels yet</div>
             <div style="color:#5a6069;font-size:14px">Enter at least one sine, random or shock level to size a system.</div>
-            <button data-i="2" onClick="{{ onStep }}" style="border:0;background:oklch(0.5 0.14 252);color:#ffffff;border-radius:10px;padding:10px 16px;min-height:44px;cursor:pointer;font-weight:500">Go to test profile</button>
+            <button data-i="2" onClick="{{ onStep }}" style="border:0;background:#033e8a;color:#ffffff;border-radius:10px;padding:10px 16px;min-height:44px;cursor:pointer;font-weight:500">Go to test profile</button>
           </div>
         </sc-if>
         <sc-if value="{{ rec.none }}">
@@ -314,7 +347,7 @@ input,select,textarea,button{font:inherit}
         </sc-if>
 
         <sc-if value="{{ hasOpps }}">
-          <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px">
+          <div data-fb-area="addons" style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px">
             <div style="display:flex;flex-direction:column;gap:2px">
               <div style="font-weight:600;font-size:16px">Complete the system</div>
               <div style="font-size:13px;color:#5a6069">Detected from the answers on this call. Add the ones the customer agrees to — they go into the summary.</div>
@@ -324,7 +357,12 @@ input,select,textarea,button{font:inherit}
                 <div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:4px">
                   <div style="font-weight:600">{{ o.title }}</div>
                   <div style="font-size:13px;color:#3b4047;text-wrap:pretty">{{ o.reason }}</div>
-                  <div style="font-size:13px;color:oklch(0.45 0.12 252);text-wrap:pretty">{{ o.say }}</div>
+                  <div style="font-size:13px;color:#033e8a;text-wrap:pretty">{{ o.say }}</div>
+                  <sc-if value="{{ o.hasLinks }}">
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+                      <sc-for list="{{ o.links }}" as="l" hint-placeholder-count="1"><a href="{{ l.url }}" target="_blank" rel="noopener" style="padding:4px 10px;border:1px solid #d8d5cf;border-radius:999px;text-decoration:none;font-size:12px;background:#fbfaf8">{{ l.label }} ↗</a></sc-for>
+                    </div>
+                  </sc-if>
                 </div>
                 <button data-o="{{ o.id }}" onClick="{{ onAdd }}" style="flex:0 0 auto;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer;font-size:13px;font-weight:500">{{ o.btn }}</button>
               </div>
@@ -347,21 +385,28 @@ input,select,textarea,button{font:inherit}
               <div style="font-size:13px;color:#5a6069">Core items. Ask now, or note them as follow-up.</div>
               <sc-for list="{{ missing }}" as="m" hint-placeholder-count="3">
                 <button data-i="{{ m.i }}" onClick="{{ onStep }}" style="border:0;background:transparent;padding:6px 0;text-align:left;cursor:pointer;display:flex;justify-content:space-between;gap:8px;font-size:14px;color:#16191d;min-height:36px">
-                  <span>{{ m.label }}</span><span style="color:oklch(0.5 0.14 252);font-size:12px;font-family:'IBM Plex Mono',monospace">{{ m.step }} →</span>
+                  <span>{{ m.label }}</span><span style="color:#033e8a;font-size:12px;font-family:'IBM Plex Mono',monospace">{{ m.step }} →</span>
                 </button>
               </sc-for>
             </div>
           </sc-if>
         </div>
 
+        <sc-if value="{{ hasSpec }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#eef3fa;border:1px solid #c9d6ea;border-radius:12px;padding:12px 14px">
+            <span style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#033e8a">Shaker specialist</span>
+            <span style="font-size:15px;font-weight:600;color:#0b1f3a">{{ specLabel }}</span>
+            <a href="{{ specHref }}" style="font-size:15px;font-weight:600;color:#033e8a;overflow-wrap:anywhere">{{ specEmail }}</a>
+          </div>
+        </sc-if>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button onClick="{{ copySummary }}" style="flex:1 1 200px;border:0;background:#16191d;color:#ffffff;border-radius:12px;padding:12px 16px;min-height:48px;cursor:pointer;font-weight:600">{{ copyLabel }}</button>
+          <button data-fb-area="summary" onClick="{{ copySummary }}" style="flex:1 1 200px;border:0;background:#16191d;color:#ffffff;border-radius:12px;padding:12px 16px;min-height:48px;cursor:pointer;font-weight:600">{{ copyLabel }}</button>
           <a href="{{ mailto }}" style="flex:1 1 200px;display:flex;align-items:center;justify-content:center;border:1px solid #16191d;color:#16191d;border-radius:12px;padding:12px 16px;min-height:48px;text-decoration:none;font-weight:600">Email to shaker specialist</a>
         </div>
 
         <sc-if value="{{ hasLinks }}">
           <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:#5a6069">
-            <span>W5 pages to send the customer:</span>
+            <span>W5 pages to send with the recap:</span>
             <sc-for list="{{ links }}" as="l" hint-placeholder-count="2"><a href="{{ l.url }}" target="_blank" rel="noopener" style="padding:6px 12px;border:1px solid #d8d5cf;border-radius:999px;text-decoration:none;font-size:13px;background:#ffffff">{{ l.label }}</a></sc-for>
           </div>
         </sc-if>
@@ -383,7 +428,7 @@ input,select,textarea,button{font:inherit}
     </sc-if>
   </div>
 
-  <div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:16px">
+  <div data-fb-area="recommendation" style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:16px">
     <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div style="font-weight:600">Live sizing</div>
@@ -414,7 +459,7 @@ input,select,textarea,button{font:inherit}
       <div style="background:#ffffff;border:1px solid #e4e2dd;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:600">Opportunities</div>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:oklch(0.5 0.14 252)">{{ oppCount }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#033e8a">{{ oppCount }}</span>
         </div>
         <sc-for list="{{ opps }}" as="o" hint-placeholder-count="3">
           <div style="display:flex;gap:8px;font-size:13px;align-items:baseline">
@@ -440,25 +485,107 @@ input,select,textarea,button{font:inherit}
 </div>
 
 <sc-if value="{{ fbOpen }}" hint-placeholder-val="{{ false }}">
-  <div style="position:fixed;inset:0;background:rgba(22,25,29,.45);z-index:30;display:flex;align-items:flex-end;justify-content:center;padding:12px">
-    <div style="width:min(520px,100%);background:#ffffff;border-radius:16px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;max-height:85vh;overflow-y:auto">
+  <div data-fb-ui="1" style="position:fixed;inset:0;background:rgba(22,25,29,.45);z-index:30;display:flex;align-items:flex-end;justify-content:center;padding:12px">
+    <div onDrop="{{ fbDrop }}" onDragOver="{{ fbDragOver }}" style="width:min(560px,100%);background:#ffffff;border-radius:16px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div style="display:flex;flex-direction:column"><span style="font-weight:600;font-size:16px">Beta feedback</span><span style="font-size:13px;color:#5a6069">Goes straight to the W5 team with this call attached (no customer data is sent beyond what you typed).</span></div>
-        <button onClick="{{ toggleFb }}" style="border:0;background:transparent;font-size:22px;cursor:pointer;min-width:40px;min-height:40px;color:#5a6069">×</button>
+        <div style="display:flex;flex-direction:column"><span style="font-weight:600;font-size:16px">Beta feedback</span><span style="font-size:13px;color:#5a6069">Goes straight to the W5 team.</span></div>
+        <button onClick="{{ fbClose }}" style="border:0;background:transparent;font-size:22px;cursor:pointer;min-width:40px;min-height:40px;color:#5a6069">×</button>
       </div>
-      <sc-if value="{{ fbSent }}"><div style="padding:12px;border-radius:10px;background:oklch(0.95 0.04 155);color:oklch(0.4 0.12 155);font-weight:500">Thanks — received. Keep it coming.</div></sc-if>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        <sc-for list="{{ fbKinds }}" as="k" hint-placeholder-count="4"><button data-k="{{ k.k }}" onClick="{{ onFbKind }}" style="min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid {{ k.bd }};background:{{ k.bg }};color:{{ k.fg }};font-size:14px;cursor:pointer">{{ k.k }}</button></sc-for>
+      <sc-if value="{{ fbSent }}">
+        <div style="padding:12px 14px;border-radius:12px;background:oklch(0.95 0.04 155);color:oklch(0.36 0.11 155);display:flex;flex-direction:column;gap:4px">
+          <span style="font-weight:600">Thank you — sent to the W5 team ({{ fbSentId }}).</span>
+          <span style="font-size:13px">Follow it under “Your reports” below. Send another any time.</span>
+          <sc-if value="{{ fbShotLost }}"><span style="font-size:13px;color:oklch(0.45 0.12 70);font-weight:500">{{ fbShotLost }}</span></sc-if>
+        </div>
+      </sc-if>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#eef3fa">
+        <div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#033e8a">About</span>
+          <span style="font-size:14px;color:#0b1f3a;overflow-wrap:anywhere">{{ fbAbout }}</span>
+        </div>
+        <button data-fb-ui="1" onClick="{{ fbRepick }}" style="flex:0 0 auto;border:1px solid #033e8a;background:#ffffff;color:#033e8a;border-radius:999px;padding:6px 12px;min-height:38px;cursor:pointer;font-size:13px;font-weight:600">{{ fbPickLabel }}</button>
       </div>
-      <textarea value="{{ fbText }}" onInput="{{ onFbText }}" rows="4" placeholder="What happened, what you expected, which customer/quote if relevant…" style="width:100%;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;color:#16191d;resize:vertical"></textarea>
-      <sc-if value="{{ fbErr }}"><div style="font-size:13px;color:oklch(0.53 0.17 27)">{{ fbErr }}</div></sc-if>
-      <button onClick="{{ sendFb }}" style="border:0;background:#16191d;color:#ffffff;border-radius:12px;padding:12px 16px;min-height:48px;cursor:pointer;font-weight:600">Send to W5</button>
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-weight:600;font-size:14px">Which part</span>
+        <select value="{{ fbArea }}" onChange="{{ onFbArea }}" style="width:100%;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;min-height:46px;color:#16191d">
+          <sc-for list="{{ fbAreaOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.val }}">{{ o.label }}</option></sc-for>
+        </select>
+      </label>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-weight:600;font-size:14px">What kind</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ fbKinds }}" as="k" hint-placeholder-count="4"><button data-k="{{ k.k }}" onClick="{{ onFbKind }}" style="min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid {{ k.bd }};background:{{ k.bg }};color:{{ k.fg }};font-size:14px;cursor:pointer;text-align:left">{{ k.label }}</button></sc-for>
+        </div>
+      </div>
+      <sc-if value="{{ fbIsBroken }}">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-weight:600;font-size:14px">How much does it matter</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ fbSevs }}" as="k" hint-placeholder-count="3"><button data-k="{{ k.k }}" onClick="{{ onFbSev }}" style="min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid {{ k.bd }};background:{{ k.bg }};color:{{ k.fg }};font-size:14px;cursor:pointer">{{ k.label }}</button></sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-weight:600;font-size:14px">Details</span>
+        <textarea value="{{ fbText }}" onInput="{{ onFbText }}" rows="4" placeholder="{{ fbPh }}" style="width:100%;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;color:#16191d;resize:vertical"></textarea>
+      </label>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <span style="font-weight:600;font-size:14px">Screenshots <span style="font-weight:400;color:#5a6069">(optional)</span></span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a6069">{{ fbShotCount }}</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <sc-for list="{{ fbShots }}" as="s" hint-placeholder-count="0">
+            <div style="position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;border:1px solid #d8d5cf">
+              <span style="display:block;width:100%;height:100%;background-image:url({{ s.src }});background-size:cover;background-position:center"></span>
+              <button data-i="{{ s.i }}" onClick="{{ fbDelShot }}" style="position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(22,25,29,.75);color:#ffffff;cursor:pointer;font-size:15px;line-height:1">×</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ fbCanAdd }}">
+            <label style="display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:10px;border:1px dashed #9aa3ad;color:#033e8a;cursor:pointer;font-size:13px;font-weight:600;text-align:center;line-height:1.2">+ Add<input type="file" accept="image/*" multiple onChange="{{ onFbFiles }}" style="display:none"></label>
+          </sc-if>
+        </div>
+        <span style="font-size:12px;color:#5a6069">On a phone, add from your photos. On a computer you can also paste (Ctrl/⌘V) or drop an image here.</span>
+      </div>
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-weight:600;font-size:14px">Your name <span style="font-weight:400;color:#5a6069">(optional)</span></span>
+        <input value="{{ fbName }}" onInput="{{ onFbName }}" placeholder="So we can follow up" style="width:100%;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#fbfaf8;font-size:16px;min-height:46px;color:#16191d">
+      </label>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#16191d;cursor:pointer">
+        <input type="checkbox" checked="{{ fbIncl }}" onChange="{{ onFbIncl }}" style="width:20px;height:20px;margin:1px 0 0;flex:0 0 auto">
+        <span>Include the current call details <span style="color:#5a6069">— helps us check sizing problems</span></span>
+      </label>
+      <sc-if value="{{ fbErr }}"><div style="font-size:14px;color:oklch(0.5 0.17 27);font-weight:500">{{ fbErr }}</div></sc-if>
+      <button onClick="{{ sendFb }}" style="border:0;background:#033e8a;color:#ffffff;border-radius:12px;padding:12px 16px;min-height:50px;cursor:pointer;font-weight:600;font-size:16px">{{ fbSendLabel }}</button>
+      <sc-if value="{{ fbHasMine }}">
+        <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid #e4e2dd;padding-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-weight:600;font-size:14px">Your reports</span>
+            <button onClick="{{ fbRefreshMine }}" style="border:0;background:transparent;color:#033e8a;cursor:pointer;font-size:13px;font-weight:600;min-height:36px">↻ Refresh</button>
+          </div>
+          <sc-for list="{{ fbMine }}" as="m" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid #efede9">
+              <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+                <span style="font-size:13px"><span style="font-family:'IBM Plex Mono',monospace;color:#5a6069">{{ m.id }}</span> · {{ m.kind }} · {{ m.when }}</span>
+                <span style="font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:{{ m.bg }};color:{{ m.fg }}">{{ m.st }}</span>
+              </div>
+              <sc-if value="{{ m.hasReply }}"><div style="font-size:14px;color:#0b1f3a;background:#eef3fa;border-radius:10px;padding:8px 10px;text-wrap:pretty"><strong style="color:#033e8a">W5:</strong> {{ m.reply }}</div></sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
     </div>
   </div>
 </sc-if>
+<sc-if value="{{ fbPicking }}" hint-placeholder-val="{{ false }}">
+  <div data-fb-ui="1" style="position:fixed;top:0;left:0;right:0;z-index:41;background:#033e8a;color:#ffffff;padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;box-shadow:0 6px 20px rgba(3,62,138,.35)">
+    <span data-fb-ui="1" style="font-weight:600;font-size:15px;text-align:center">Tap the part of the page your feedback is about</span>
+    <button data-fb-ui="1" onClick="{{ fbSkipPick }}" style="border:0;background:#ffffff;color:#033e8a;border-radius:999px;padding:8px 16px;min-height:40px;cursor:pointer;font-weight:600">Skip</button>
+  </div>
+</sc-if>
 <sc-if value="{{ chatOpen }}" hint-placeholder-val="{{ false }}">
-  <div style="position:fixed;right:12px;bottom:86px;width:min(440px,calc(100vw - 24px));max-height:min(72vh,640px);background:#ffffff;border:1px solid #e4e2dd;border-radius:16px;box-shadow:0 12px 40px rgba(22,25,29,.18);z-index:20;display:flex;flex-direction:column;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:#1c2127;color:#eef0f2">
+  <div data-fb-area="assistant" style="position:fixed;right:12px;bottom:86px;width:min(440px,calc(100vw - 24px));max-height:min(72vh,640px);background:#ffffff;border:1px solid #e4e2dd;border-radius:16px;box-shadow:0 12px 40px rgba(22,25,29,.18);z-index:20;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:#022c63;color:#eef0f2">
       <div style="display:flex;flex-direction:column">
         <span style="font-weight:600">W5 Assistant</span>
         <span style="font-size:12px;color:#a9b0b8">Knows this call, the LDS library and the W5 knowledge base</span>
@@ -487,12 +614,12 @@ input,select,textarea,button{font:inherit}
     </div>
     <div style="display:flex;gap:8px;padding:10px;border-top:1px solid #e4e2dd;background:#fbfaf8">
       <input value="{{ chatInput }}" onInput="{{ onChatInput }}" onKeyDown="{{ onChatKey }}" placeholder="Ask the assistant…" style="flex:1 1 auto;min-width:0;padding:11px 12px;border:1px solid #d8d5cf;border-radius:10px;background:#ffffff;font-size:16px;min-height:46px;color:#16191d">
-      <button onClick="{{ chatSend }}" style="border:0;background:oklch(0.5 0.14 252);color:#ffffff;border-radius:10px;padding:0 16px;min-height:46px;cursor:pointer;font-weight:600">Send</button>
+      <button onClick="{{ chatSend }}" style="border:0;background:#033e8a;color:#ffffff;border-radius:10px;padding:0 16px;min-height:46px;cursor:pointer;font-weight:600">Send</button>
     </div>
   </div>
 </sc-if>
 <sc-if value="{{ chatClosed }}" hint-placeholder-val="{{ true }}">
-<button onClick="{{ toggleChat }}" style="position:fixed;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:21;border:0;border-radius:999px;background:#1c2127;color:#eef0f2;padding:0 16px;min-height:44px;cursor:pointer;font-weight:600;font-size:14px;box-shadow:0 6px 20px rgba(22,25,29,.25);display:flex;align-items:center;gap:8px">
+<button onClick="{{ toggleChat }}" style="position:fixed;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:21;border:0;border-radius:999px;background:#022c63;color:#eef0f2;padding:0 16px;min-height:44px;cursor:pointer;font-weight:600;font-size:14px;box-shadow:0 6px 20px rgba(22,25,29,.25);display:flex;align-items:center;gap:8px">
   <span style="width:8px;height:8px;border-radius:50%;background:oklch(0.78 0.12 252)"></span>Ask W5
 </button>
 </sc-if>
@@ -506,7 +633,7 @@ input,select,textarea,button{font:inherit}
     <sc-if value="{{ canBack }}">
       <button onClick="{{ back }}" style="border:1px solid #d8d5cf;background:#ffffff;border-radius:12px;padding:10px 14px;min-height:48px;cursor:pointer;font-weight:500">Back</button>
     </sc-if>
-    <button onClick="{{ next }}" style="border:0;background:oklch(0.5 0.14 252);color:#ffffff;border-radius:12px;padding:10px 16px;min-height:48px;cursor:pointer;font-weight:600;white-space:nowrap">{{ nextLabel }}</button>
+    <button onClick="{{ next }}" style="border:0;background:#033e8a;color:#ffffff;border-radius:12px;padding:10px 16px;min-height:48px;cursor:pointer;font-weight:600;white-space:nowrap">{{ nextLabel }}</button>
   </div>
 </div>
 
@@ -517,7 +644,7 @@ class Component extends DCLogic {
   STORE = 'lds.call.v1';
   SYS = [];
   HEADS = []; LINKS = []; KBROWS = []; GE = {}; dbErr = ''; dbConnected = true;
-  C = { acc: 'oklch(0.5 0.14 252)', ink: '#16191d', ok: 'oklch(0.52 0.12 155)', okS: 'oklch(0.95 0.04 155)', warn: 'oklch(0.62 0.13 70)', warnS: 'oklch(0.96 0.05 85)', bad: 'oklch(0.53 0.17 27)', badS: 'oklch(0.95 0.04 27)' };
+  C = { acc: '#033e8a', ink: '#16191d', ok: 'oklch(0.52 0.12 155)', okS: 'oklch(0.95 0.04 155)', warn: 'oklch(0.62 0.13 70)', warnS: 'oklch(0.96 0.05 85)', bad: 'oklch(0.53 0.17 27)', badS: 'oklch(0.95 0.04 27)' };
   state = this.loadState();
 
   // ---------- data ----------
@@ -573,8 +700,8 @@ class Component extends DCLogic {
         q: [
           { id: 'mount', label: 'Mounting interface', core: 1, type: 'text', ph: 'e.g. 4× 1/4-20 on 6 in square, drawing to follow' },
           { id: 'fixture', label: 'Fixture / adapter', core: 1, type: 'single', opts: ['Existing fixture', 'Need W5 fixture', 'Unknown'] },
-          { id: 'he', label: 'Head expander (vertical)', type: 'select', hint: 'Weight and 1st vertical mode from the LDS standard head expander datasheet.' },
-          { id: 'tb', label: 'Thermal barrier on head expander', type: 'single', opts: ['No', 'Yes'], show: f => f.he && f.he !== 'None' },
+          { id: 'heType', label: 'Head expander (vertical)', type: 'single', opts: ['Not needed', 'Unguided (standard)', 'Guided', 'Not sure'], hint: 'Needed when the part or fixture is wider than the armature. Guided expanders carry heavy, tall or offset payloads on bearings.' },
+          { id: 'tb', label: 'Thermal barrier on head expander', type: 'single', opts: ['No', 'Yes'], show: f => f.he && f.he !== 'None' && f.heType !== 'Not needed' },
           { id: 'slipWt', label: 'Slip table moving weight', type: 'num', unit: 'W', hint: 'Plate + driver bar from the combo quote or drawing.', show: f => f.axes === 'Vertical + horizontal' },
           { id: 'env', label: 'Temperature / humidity', core: 1, type: 'single', opts: ['Ambient only', 'Temperature', 'Temp + humidity'] },
           { id: 'chamber', label: 'Chamber', type: 'single', opts: ['Existing chamber', 'New chamber needed', 'Not sure'], show: envOn },
@@ -652,11 +779,11 @@ class Component extends DCLogic {
     const take = db => { if (!db) return; this.SYS = (db.systems || []).filter(s => s.active !== false); this.HEADS = (db.headExpanders || []).filter(h => h.active !== false); this.LINKS = db.links || []; this.KBROWS = db.kb || []; this.GE = db.generalExtras || {}; this.forceUpdate(); };
     this.dbConnected = window.DB && window.DB.connected();
     if (window.DB) { this.unsub = window.DB.subscribe((db, st) => { take(db); this.dbErr = st.err || ''; this.forceUpdate(); }); window.DB.ready().catch(e => { this.dbErr = e.message; this.forceUpdate(); }); }
-    this.isBeta = /[?&]beta=1/.test(location.search) || (window.DB_CONFIG && /beta/i.test(window.DB_CONFIG.appVersion || ''));
+    this.isBeta = /[?&]beta=1/.test(location.search); // the only switch: beta.html → index.html?beta=1
   }
   componentWillUnmount() { if (this.unsub) this.unsub(); }
   componentDidUpdate() {
-    try { const { copied, chatBusy, chatErr, fbOpen, fbBusy, fbErr, fbSent, ...s } = this.state; localStorage.setItem(this.STORE, JSON.stringify(s)); } catch (e) {}
+    try { const s = {}; Object.keys(this.state).forEach(k => { if (!/^(fb|copied|chatBusy|chatErr)/.test(k)) s[k] = this.state[k]; }); localStorage.setItem(this.STORE, JSON.stringify(s)); } catch (e) {}
   }
 
   // ---------- helpers ----------
@@ -827,18 +954,60 @@ class Component extends DCLogic {
       else o.push({ id: 'chamber', title: 'Environmental test chamber', short: `${f.tMin || '?'} to ${f.tMax || '?'} °C${f.env === 'Temp + humidity' ? ' + RH' : ''}`, reason: `Combined ${f.env === 'Temp + humidity' ? 'temperature/humidity' : 'temperature'} + vibration: chamber, thermal barrier and ports. Follow up with the Environmental Chamber questionnaire.`, say: '“Would you like us to quote the chamber together, so it’s sized to sit over the shaker?”' });
     }
     if (M.horiz) o.push({ id: 'slip', title: 'Slip table', short: 'Horizontal axes', reason: 'Required for horizontal axes when the part can’t simply be rotated.' + (!this.num(f.slipWt) ? ' Its moving weight isn’t in the sizing yet.' : ''), say: '“What table size do you need for horizontal testing?”' });
-    if (p && p.s.dia && M.footIn > p.s.dia && (f.he || 'None') === 'None') o.push({ id: 'he', title: 'Head expander', short: `${this.fmt(M.footIn)} in > ${this.fmt(p.s.dia)} in armature`, reason: `The mounting face (${this.fmt(M.footIn)} in) is larger than the ${this.fmt(p.s.dia)} in armature. A head expander adds weight — pick one on Mounting to include it.`, say: '“We’ll likely need a larger table surface — do you have a bolt pattern?”' });
+    if (p && p.s.dia && M.footIn > p.s.dia && (f.he || 'None') === 'None' && f.heType !== 'Not needed') o.push({ id: 'he', title: 'Head expander', short: `${this.fmt(M.footIn)} in > ${this.fmt(p.s.dia)} in armature`, reason: `The mounting face (${this.fmt(M.footIn)} in) is larger than the ${this.fmt(p.s.dia)} in armature. A head expander adds weight — pick one on Mounting to include it.`, say: '“We’ll likely need a larger table surface — do you have a bolt pattern?”' });
     if (f.fixture === 'Need W5 fixture') o.push({ id: 'fixture', title: 'Custom fixture design', short: 'W5 fixture', reason: 'Designed to stay stiff through the test range and included in the sizing.', say: '“Can you share a drawing or model of the part’s mounting points?”' });
     if (!(f.service || []).includes('Equipment quote only')) o.push({ id: 'service', title: 'Service plan & spares', short: 'Good / better / best', reason: 'Preventive maintenance, calibration and recommended spares reduce downtime.', say: '“Would you like service plan options on the quote?”' });
     if (f.ctrlBrand === 'None' || (f.scope || []).includes('Training') || (f.scope || []).includes('Turnkey system')) o.push({ id: 'train', title: 'Installation & training', short: 'Commissioning', reason: 'On-site commissioning and operator training for a new lab or first shaker.', say: '“Who on your team will be running the system day to day?”' });
     return o;
   }
 
+  OPP_TOPIC = { ctrl: 'controller', accel: 'sensors', flv: 'sensors', daq: 'daq', chamber: 'chamber', slip: 'shaker', he: 'shaker', fixture: 'shaker', service: 'service', train: 'service' };
+  specialist() { const l = this.LINKS.find(x => x.topic === 'specialist' && /^mailto:/i.test(x.url || '')); return l ? { label: l.label, email: l.url.replace(/^mailto:/i, '').split('?')[0] } : null; }
+  heFits(row, shaker) {
+    if (!row.fits || !shaker) return false;
+    const S = String(shaker).toUpperCase(); const txt = String(row.fits).toUpperCase();
+    const not = (txt.match(/\(NOT ([^)]*)\)/) || [])[1];
+    const toks = txt.replace(/\([^)]*\)/g, '').split(',').map(t => t.trim()).filter(Boolean).flatMap(t => { const m = t.match(/^(.*-)(\d+)\/(\d+)$/); return m ? [m[1] + m[2], m[1] + m[3]] : [t]; });
+    const hit = t => S === t || (S.startsWith(t) && !/\d/.test(S.charAt(t.length)));
+    if (not && not.split(/[,/]/).map(t => t.trim()).some(hit)) return false;
+    return toks.some(hit);
+  }
+  heView(A) {
+    const f = this.state.f, C = this.C, p = A.picked, M = A.M, R = A.R;
+    const show = this.state.step === 3 && ['Unguided (standard)', 'Guided', 'Not sure'].includes(f.heType);
+    const model = p ? String(p.name).split(' / ')[0].replace(/\s*\(.*\)\s*$/, '').trim() : '';
+    const out = { show, shaker: model || 'the selected shaker', cards: [], msg: '', hasMsg: false, need: '', needBg: '#efede9', needFg: '#5a6069' };
+    if (!show) return out;
+    const dia = p && p.s.dia;
+    if (!p) out.msg = 'Enter test levels first — compatible sizes depend on the shaker.';
+    if (dia && M.footIn) { const big = M.footIn > dia; out.need = big ? `Needed: ${this.fmt(M.footIn)} in face > ${this.fmt(dia)} in armature` : `Optional: face fits the ${this.fmt(dia)} in armature`; out.needBg = big ? C.warnS : C.okS; out.needFg = big ? 'oklch(0.48 0.11 70)' : C.ok; }
+    else if (dia) out.need = `Armature ${this.fmt(dia)} in — enter the mounting face size`;
+    const real = this.HEADS.filter(r => r.wt > 0);
+    const anyGuideField = real.some(r => r.guide);
+    let rows = p ? real.filter(r => this.heFits(r, model)) : [];
+    if (f.heType === 'Guided') {
+      rows = anyGuideField ? rows.filter(r => r.guide === 'guided') : [];
+      if (!rows.length) out.msg = 'No guided head expanders are in the library for this shaker yet. A shaker specialist will size one — guided expanders are used for heavy, tall or offset payloads.';
+    } else if (f.heType === 'Unguided (standard)' && anyGuideField) rows = rows.filter(r => r.guide !== 'guided');
+    if (p && !rows.length && !out.msg) out.msg = `No standard head expander in the library fits the ${model}. A shaker specialist will advise a custom size.`;
+    out.cards = rows.map(r => {
+      const on = f.he === r.name || f.he === r.id; const mm = (String(r.name).match(/(\d+)\s*mm/) || [])[1]; const sizeIn = mm ? mm / 25.4 : null;
+      const checks = [];
+      if (sizeIn && M.footIn) checks.push(sizeIn >= M.footIn ? { t: '✓ Covers the mounting face', col: C.ok } : { t: `✕ Smaller than the ${this.fmt(M.footIn)} in face`, col: C.bad });
+      if (r.mode && R.fmax) checks.push(r.mode > R.fmax ? { t: `✓ 1st mode ${this.fmt(r.mode)} Hz above test (${this.fmt(R.fmax)} Hz)`, col: C.ok } : { t: `! Test reaches ${this.fmt(R.fmax)} Hz, above its ${this.fmt(r.mode)} Hz mode — multipoint control`, col: 'oklch(0.48 0.11 70)' });
+      return { name: r.name, size: r.name.split(/\s[–-]\s/)[0], specs: `${this.fmt(r.wt)} lb${r.tb ? ` · barrier +${this.fmt(r.tb)} lb` : ''}${r.mode ? ` · 1st mode ${this.fmt(r.mode)} Hz` : ''}`, checks, sel: on ? 'Selected ✓' : 'Use this', selFg: on ? C.ok : C.acc, bd: on ? C.acc : '#e4e2dd', bg: on ? '#eef3fa' : '#ffffff' };
+    });
+    out.hasMsg = !!out.msg;
+    return out;
+  }
+  linksFor(topic) { return this.LINKS.filter(l => l.topic === topic).map(l => ({ label: l.label, url: l.url })); }
   smeFlags(A) {
     const f = this.state.f, T = f.types || [], x = [], R = A.R, M = A.M, p = A.picked;
     if (R.any && this.SYS.length && !A.cands.length) x.push('No library system fits — review larger, water-cooled or multi-shaker options.');
     if (p && p.res === 'CHECK') x.push('Datasheet gives no rating for: ' + p.checks.filter(c => c.st === 'NO DATA').map(c => c.label.toLowerCase()).join(', ') + ' — confirm with HBK.');
     if (p && p.peak > A.H) x.push(`Low headroom (${this.pct(p.peak)} of ${p.driver ? p.driver.label.toLowerCase() : 'rating'}) — confirm levels and fixture weight.`);
+    if (f.heType === 'Guided') x.push('Guided head expander requested — size bearing guidance for the payload weight, height and CG.');
+    if (['Unguided (standard)', 'Guided'].includes(f.heType) && (!f.he || f.he === 'None')) x.push('Head expander needed but no size chosen yet — its weight is not in the sizing.');
     if (['Offset', 'High CG'].includes(f.cg)) x.push('Offset / high CG — check overturning moment and fixture design.');
     if (M.heMode && R.fmax && R.fmax >= M.heMode) x.push(`Test frequency (${this.fmt(R.fmax)} Hz) is above the head expander 1st mode (${this.fmt(M.heMode)} Hz) — multipoint control and fixture survey.`);
     if (f.flv === 'Yes' || (f.flv || '').startsWith('Not sure')) x.push('FLV requested — define force limit curve and force channels.');
@@ -874,7 +1043,7 @@ class Component extends DCLogic {
     L.push(`Purpose: ${(f.purpose || []).join(', ') || '—'} | Spec: ${f.specName || f.spec || '—'}`);
     L.push('');
     L.push(`DUT: ${f.dutDesc || '—'} — ${f.dutWt || '?'} ${u}; fixture ${f.fixWt || '?'} ${u}; CG ${f.cg || '?'}`);
-    L.push(`Payload ${this.fmt(M.payload)} lb; head expander: ${M.heName}${f.tb === 'Yes' ? ' + thermal barrier' : ''}; axes: ${f.axes || '?'}`);
+    L.push(`Payload ${this.fmt(M.payload)} lb; head expander: ${M.heName}${f.heType && f.heType !== 'Not needed' ? ' (' + f.heType + ')' : ''}${f.tb === 'Yes' ? ' + thermal barrier' : ''}; axes: ${f.axes || '?'}`);
     L.push(`Tests: ${(f.types || []).join(', ') || '—'}`);
     if (R.sineAcc) L.push(`  Sine: ${this.fmt(R.sineAcc)} g pk, ${this.fmt(R.sineVel)} in/s, ${this.fmt(R.sineDisp)} in pk-pk`);
     if (R.grms) L.push(`  Random: ${this.fmt(R.grms)} Grms, ${this.fmt(R.rDisp)} in pk-pk (${this.props.sigma ?? 3}σ)`);
@@ -895,7 +1064,9 @@ class Component extends DCLogic {
     L.push(`Scope: ${(f.scope || []).join(', ') || '—'} | Service: ${(f.service || []).join(', ') || '—'}`);
     L.push(`Quote by: ${f.quoteBy || '—'} | Decision: ${f.decision || '—'} | Install: ${f.install || '—'} | Budget: ${f.budget || '—'}`);
     const add = opps.filter(o => this.state.added[o.id]);
-    if (add.length) { L.push(''); L.push('ADD TO PROPOSAL:'); add.forEach(o => L.push(`  • ${o.title} — ${o.short}`)); }
+    if (add.length) { L.push(''); L.push('ADD TO PROPOSAL:'); add.forEach(o => { L.push(`  • ${o.title} — ${o.short}`); this.linksFor(this.OPP_TOPIC[o.id]).forEach(l => L.push(`      ${l.label}: ${l.url}`)); }); }
+    if (this.specialist()) { L.push(''); L.push(`SHAKER SPECIALIST: ${this.specialist().label} <${this.specialist().email}>`); }
+    const shakerLinks = this.linksFor('shaker'); if (shakerLinks.length) { L.push(''); L.push('W5 PAGES: ' + shakerLinks.map(l => l.url).join('  ')); }
     const other = opps.filter(o => !this.state.added[o.id]);
     if (other.length) { L.push('Other opportunities discussed: ' + other.map(o => o.title).join(', ')); }
     if (flags.length) { L.push(''); L.push('SME REVIEW:'); flags.forEach(x => L.push('  • ' + x)); }
@@ -928,7 +1099,7 @@ class Component extends DCLogic {
 
     const questions = cur.q.filter(q => (!q.show || q.show(f)) && (!S.core || q.core)).map(q => this.qView(q, f));
     const stepPills = steps.map((s, i) => { const on = i === S.step, done = this.stepDone(i);
-      return { i, label: s.label, mark: done && !on ? '✓' : String(i + 1), bg: on ? C.ink : '#ffffff', fg: on ? '#ffffff' : C.ink, bd: on ? C.ink : '#e4e2dd', dotBg: on ? '#ffffff' : done ? C.okS : '#efede9', dotFg: on ? C.ink : done ? C.ok : '#5a6069' }; });
+      return { i, label: s.label, mark: done && !on ? '✓' : String(i + 1), bg: on ? C.acc : '#ffffff', fg: on ? '#ffffff' : C.ink, bd: on ? C.acc : '#e4e2dd', dotBg: on ? '#ffffff' : done ? C.okS : '#efede9', dotFg: on ? C.acc : done ? C.ok : '#5a6069' }; });
 
     const sineRows = S.sine.map((r, i) => ({ i, ...r, info: A.sRows[i].info, infoCol: A.sRows[i].err ? C.bad : '#5a6069' }));
     const psdRows = S.psd.map((r, i) => ({ i, ...r, cum: A.rRows[i].cum, info: A.rRows[i].info, hasInfo: !!A.rRows[i].info, infoCol: A.rRows[i].err ? C.bad : '#5a6069' }));
@@ -950,7 +1121,7 @@ class Component extends DCLogic {
 
     const alts = A.cands.slice(0, 10).map(e => { const st = this.stat(e.res); return { name: e.name, pct: this.pct(e.peak) + (e.lead ? ` · ${e.leadTxt}` : ''), col: this.utilCol(e.peak, H), st: e.res === 'PASS' ? 'Fits' : 'Confirm', stFg: st.fg, stBg: st.bg, bg: p && e === p ? 'oklch(0.97 0.02 252)' : '#ffffff' }; });
 
-    const oppV = opps.map(o => { const on = !!S.added[o.id]; return { ...o, btn: on ? 'Added ✓' : 'Add to proposal', bg: on ? C.okS : '#ffffff', fg: on ? C.ok : C.acc, bd: on ? C.ok : C.acc, dot: on ? C.ok : C.acc }; });
+    const oppV = opps.map(o => { const on = !!S.added[o.id]; const lk = this.linksFor(this.OPP_TOPIC[o.id]); return { ...o, links: lk, hasLinks: lk.length > 0, btn: on ? 'Added ✓' : 'Add to proposal', bg: on ? C.okS : '#ffffff', fg: on ? C.ok : C.acc, bd: on ? C.ok : C.acc, dot: on ? C.ok : C.acc }; });
 
     const liveRows = [{ k: 'Payload (DUT + fixture + misc)', v: `${this.fmt(M.payload)} lb` }];
     if (M.vHw) liveRows.push({ k: 'Head expander / barrier', v: `${this.fmt(M.vHw)} lb` });
@@ -974,8 +1145,9 @@ class Component extends DCLogic {
     return {
       cur, kicker: `STEP ${S.step + 1} OF ${steps.length} · ABOUT ${cur.min} MIN`,
       coachOpen: S.coach, coachToggle: S.coach ? 'Hide' : 'Show',
-      coachSay: cur.say.map((t, i) => ({ n: String(i + 1).padStart(2, '0'), t })), coachListen: cur.listen.map(([cue, opp]) => ({ cue, opp })),
-      stepPills, questions, showForm: questions.length > 0, showProfile: S.step === 2, showRec: last,
+      coachSay: cur.say.map((t, i) => { const m = t.match(/^(“[^”]*”)\s*[—-]?\s*(.*)$/); const q = m ? m[1] : t, rest = m ? m[2] : ''; const r2 = rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : ''; return { n: String(i + 1), q, rest: r2, hasRest: !!r2 }; }), coachListen: cur.listen.map(([cue, opp]) => ({ cue: String(cue).replace(/^[“"]+|[”"]+$/g, ''), opp })),
+      stepPills, questions, showForm: questions.length > 0, he: this.heView(A),
+      onHe: e => { const n = e.currentTarget.dataset.he; this.setState(s => ({ f: { ...s.f, he: s.f.he === n ? 'None' : n } })); }, showProfile: S.step === 2, showRec: last,
       noTypes: !(f.types || []).length, useSine: R.useSine, useRand: R.useRand, useShock: R.useShock,
       sineRows, psdRows, shockRows, dB: f.dB || '',
       sineSum: R.sineAcc ? `${this.fmt(R.sineAcc)} g · ${this.fmt(R.sineVel)} in/s · ${this.fmt(R.sineDisp)} in pk-pk` : '',
@@ -986,20 +1158,16 @@ class Component extends DCLogic {
       missing, hasMissing: missing.length > 0,
       live, bar, canBack: S.step > 0, nextLabel: last ? (S.copied ? 'Copied' : 'Copy summary') : `Next: ${steps[S.step + 1].label}`,
       copyLabel: S.copied ? 'Copied to clipboard' : 'Copy call summary',
-      mailto: `mailto:${this.GE.feedbackEmail || ''}?subject=${encodeURIComponent('Shaker sizing — ' + (f.company || 'customer'))}&body=${encodeURIComponent(text)}`,
+      hasSpec: !!this.specialist(), specLabel: (this.specialist() || {}).label || '', specEmail: (this.specialist() || {}).email || '', specHref: this.specialist() ? 'mailto:' + this.specialist().email : '',
+      mailto: `mailto:${(this.specialist() || {}).email || ''}?subject=${encodeURIComponent('Shaker sizing — ' + (f.company || 'customer'))}&body=${encodeURIComponent(text)}`,
       unitOpts: ['lb', 'kg'].map(u => ({ label: u === 'lb' ? 'lb · in' : 'kg · mm', val: u, bg: f.unit === u ? '#f3f4f5' : 'transparent', fg: f.unit === u ? C.ink : '#f3f4f5' })),
-      coreLabel: S.core ? 'Showing core only' : 'Showing all questions', coreBg: S.core ? '#2b3139' : 'transparent',
+      coreLabel: S.core ? 'Showing core only' : 'Showing all questions', coreBg: S.core ? 'rgba(255,255,255,.18)' : 'transparent',
       chatOpen: !!S.chatOpen, chatEmpty: !(S.chat || []).length, chatBusy: !!S.chatBusy, chatErr: !!S.chatErr, chatErrText: S.chatErr || '', chatInput: S.chatInput || '',
       chatMsgs: (S.chat || []).map(m => ({ text: m.content, just: m.role === 'user' ? 'flex-end' : 'flex-start', bg: m.role === 'user' ? C.acc : '#f1efeb', fg: m.role === 'user' ? '#ffffff' : C.ink })),
       chatStarters: ['Why is shock velocity the sizing driver here?', 'Customer asks: can we skip the fixture weight for now?', 'What does FLV protect against, in plain words?', 'What should I ask before quoting a chamber?'],
       chatClosed: !S.chatOpen,
-      isBeta: !!this.isBeta, betaLabel: this.GE.betaLabel ?? '', hasBetaLabel: !!this.GE.betaLabel, fbOpen: !!S.fbOpen, fbKind: S.fbKind || '', fbText: S.fbText || '', fbSent: !!S.fbSent, fbBusy: !!S.fbBusy, fbErr: S.fbErr || '',
-      fbKinds: ['Bug', 'Wrong recommendation', 'Missing question', 'Idea', 'Other'].map(k => ({ k, bg: (S.fbKind || '') === k ? C.acc : '#ffffff', fg: (S.fbKind || '') === k ? '#ffffff' : C.ink, bd: (S.fbKind || '') === k ? C.acc : '#d8d5cf' })),
-      toggleFb: () => this.setState(s => ({ fbOpen: !s.fbOpen, fbSent: false, fbErr: '' })),
-      onFbKind: e => this.setState({ fbKind: e.currentTarget.dataset.k }),
-      onFbText: e => this.setState({ fbText: e.target.value }),
-      sendFb: () => this.sendFeedback(text, cur.label),
-      links: this.LINKS.map(l => ({ label: l.label, url: l.url })), hasLinks: this.LINKS.length > 0,
+      isBeta: !!this.isBeta, betaLabel: this.GE.betaLabel ?? '', hasBetaLabel: !!this.isBeta && !!this.GE.betaLabel, ...this.fbVals(S, cur, text),
+      links: this.linksFor('shaker').concat(this.linksFor('general')), hasLinks: this.linksFor('shaker').concat(this.linksFor('general')).length > 0,
       toggleChat: () => this.setState(s => ({ chatOpen: !s.chatOpen, chatErr: '' })),
       chatClear: () => this.setState({ chat: [], chatErr: '' }),
       onChatInput: e => this.setState({ chatInput: e.target.value }),
@@ -1015,6 +1183,7 @@ class Component extends DCLogic {
           if (def.type === 'multi') { const cur = s.f[q] || []; const excl = ['No', 'None known', 'Unknown', 'Equipment quote only'];
             if (cur.includes(v)) val = cur.filter(x => x !== v); else val = excl.includes(v) ? [v] : [...cur.filter(x => !excl.includes(x)), v]; }
           else val = s.f[q] === v ? '' : v;
+          if (q === 'heType' && val === 'Not needed') return { f: { ...s.f, heType: val, he: 'None', tb: 'No' } };
           return { f: { ...s.f, [q]: val } };
         });
       },
@@ -1045,9 +1214,15 @@ class Component extends DCLogic {
     const hist = [...(this.state.chat || []), { role: 'user', content: q }];
     this.setState({ chat: hist, chatInput: '', chatBusy: true, chatErr: '' });
     try {
-      if (!(window.claude && window.claude.complete)) throw new Error('The assistant is not available in this preview.');
+      let reply;
+      if (!(window.claude && window.claude.complete)) {
+        if (!(window.DB && window.DB.assist)) throw new Error('The assistant is not reachable from this page.');
+        const r = await window.DB.assist(hist.map(m => ({ role: m.role, content: m.content })), callSummary);
+        if (!r || !r.ok) throw new Error((r && r.error) || 'The assistant did not answer — please try again.');
+        reply = r.text;
+      } else {
       const KBtext = this.KBROWS.filter(k => k.active !== false).sort((a, b) => (a.order || 0) - (b.order || 0)).map(k => '## ' + k.title + '\n' + k.body).join('\n\n');
-      const system = `You are the W5 Engineering shaker-selection assistant, helping a salesperson during a live customer call about LDS electrodynamic shaker systems. Be brief (under 120 words unless asked), plain-spoken, and practical: give the answer, then what to say or ask next. Answer in plain text only — no markdown, no asterisks, no headings; short paragraphs or simple "- " bullets. The customer's shock pulse (peak g and duration) is given in the live call section; the "2 ms" in the knowledge base is only the datasheet rating assumption — never describe the customer's pulse as 2 ms unless it is. Use the knowledge base first; when a question is outside it, say so and recommend looping in a W5 shaker SME ${this.GE.feedbackEmail ? '(' + this.GE.feedbackEmail + ')' : ''}. Never invent ratings — use the lookup_system tool for library numbers. Do not give prices.
+      const system = `You are the W5 Engineering shaker-selection assistant, helping a salesperson during a live customer call about LDS electrodynamic shaker systems. Be brief (under 120 words unless asked), plain-spoken, and practical: give the answer, then what to say or ask next. Answer in plain text only — no markdown, no asterisks, no headings; short paragraphs or simple "- " bullets. The customer's shock pulse (peak g and duration) is given in the live call section; the "2 ms" in the knowledge base is only the datasheet rating assumption — never describe the customer's pulse as 2 ms unless it is. Use the knowledge base first; when a question is outside it, say so and recommend looping in a W5 shaker SME${this.specialist() ? ' — ' + this.specialist().label + ', ' + this.specialist().email + ' (give this email when asked who the specialist is)' : ''}. Never invent ratings — use the lookup_system tool for library numbers. Do not give prices.
 
 ## Knowledge base
 ${KBtext || '(empty)'}
@@ -1058,7 +1233,8 @@ ${callSummary}`;
         input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
         run: async ({ query }) => { const qq = String(query || '').toLowerCase(); const hits = this.SYS.filter(s => s.name.toLowerCase().includes(qq) || s.shaker.toLowerCase().includes(qq)).slice(0, 8); const lbl = s => `${s.name}: sine force ${s.sine ?? 'n/a'} lbf pk; random force ${s.random ?? 'not rated'} lbf rms; half-sine shock force ${s.shock ?? 'not rated'} lbf pk; stroke ${s.disp ?? 'n/a'} in pk-pk; max sine velocity ${s.vel ?? 'n/a'} in/s pk; shock velocity ${s.shockVel ?? 'same as sine velocity'}; bare-table sine accel ${s.sineAcc ?? 'n/a'} g pk; bare-table random accel ${s.randAcc ?? 'n/a'} Grms; armature weight ${s.arm} lb; static load support ${s.load ?? 'n/a'} lb; frequency ${s.fmin}–${s.fmax} Hz; armature dia ${s.dia ?? 'n/a'} in; ${this.singlePhase && this.singlePhase(s) ? 'single-phase power' : '3-phase power'}; lead ${this.leadWeeks && this.leadWeeks(s) ? this.leadWeeks(s).join('–') + ' wk' : 'confirm with HBK'}; source ${s.src}${s.notes ? '; note: ' + s.notes : ''}`;
           return hits.length ? hits.map(lbl).join('\n') : 'No matching system in the library.'; } }];
-      const reply = await window.claude.complete({ system, messages: hist.map(m => ({ role: m.role, content: m.content })), max_tokens: 700, tools });
+      reply = await window.claude.complete({ system, messages: hist.map(m => ({ role: m.role, content: m.content })), max_tokens: 700, tools });
+      }
       const clean = String(reply || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/(^|\s)\*(\S[^*]*?)\*(?=\s|$|[.,;:])/g, '$1$2').replace(/^#{1,4}\s+/gm, '').trim();
       this.setState(s => ({ chat: [...s.chat, { role: 'assistant', content: clean }], chatBusy: false }));
     } catch (e) {
@@ -1066,13 +1242,114 @@ ${callSummary}`;
     }
   }
 
-  async sendFeedback(summary, step) {
-    const t = (this.state.fbText || '').trim(); if (!t) { this.setState({ fbErr: 'Tell us what happened first.' }); return; }
+  // ---------- beta feedback (only with ?beta=1) ----------
+  FB = {
+    areas: [['coach', 'Call coach'], ['questions', 'Questions & answers'], ['profile', 'Test levels (sine / random / shock)'], ['recommendation', 'Recommendation & sizing'], ['addons', 'Complete the system (add-ons)'], ['assistant', 'Ask W5 assistant'], ['summary', 'Summary, copy & email'], ['layout', 'Layout, looks or phone view'], ['other', 'Something else']],
+    kinds: [['broken', 'Something is broken'], ['wrong', 'A number or recommendation looks wrong'], ['suggestion', 'Suggestion'], ['question', 'Question']],
+    sev: [['blocker', 'Stops me'], ['annoying', 'Gets in the way'], ['minor', 'Minor']],
+    ph: { broken: 'What did you do, what happened, and what did you expect?', wrong: 'What looks wrong, and what did you expect instead? (e.g. HBK quoted a different system for this profile)', suggestion: 'What would make this better on a customer call?', question: 'What would you like to know?' },
+    status: { new: ['Received', '#efede9', '#3b4047'], triaged: ['Being looked at', '#eef3fa', '#033e8a'], planned: ['Planned', '#eef3fa', '#033e8a'], done: ['Fixed', 'oklch(0.95 0.04 155)', 'oklch(0.38 0.11 155)'], fixed: ['Fixed', 'oklch(0.95 0.04 155)', 'oklch(0.38 0.11 155)'], declined: ['Not planned', '#efede9', '#3b4047'], wontfix: ['Not planned', '#efede9', '#3b4047'], duplicate: ['Already reported', '#efede9', '#3b4047'] }
+  };
+  stepArea() { const st = this.state.step, n = this.steps().length; return st === 2 ? 'profile' : st === n - 1 ? 'recommendation' : 'questions'; }
+  fbVals(S, cur, text) {
+    const C = this.C, chip = (k, label, on) => ({ k, label, bg: on ? C.acc : '#ffffff', fg: on ? '#ffffff' : C.ink, bd: on ? C.acc : '#d8d5cf' });
+    const kind = S.fbKind || 'suggestion', shots = S.fbShots || [], tg = S.fbTarget, areaLab = Object.fromEntries(this.FB.areas), kindLab = Object.fromEntries(this.FB.kinds);
+    return {
+      fbOpen: !!S.fbOpen, fbPicking: !!S.fbPicking, fbSent: !!S.fbSentId, fbSentId: S.fbSentId || '', fbErr: S.fbErr || '', fbText: S.fbText || '',
+      fbShotLost: S.fbShotLost ? `${S.fbShotLost} screenshot(s) could not be saved — please send them again.` : '',
+      fbAbout: tg ? [tg.section, tg.label ? '“' + tg.label.slice(0, 70) + '”' : ''].filter(Boolean).join(' › ') : `Nothing picked · step: ${cur.label}`, fbPickLabel: tg ? 'Pick again' : 'Point at it',
+      fbAreaOpts: this.FB.areas.map(([val, label]) => ({ val, label })), fbArea: S.fbArea || this.stepArea(),
+      fbKinds: this.FB.kinds.map(([k, l]) => chip(k, l, kind === k)), fbIsBroken: kind === 'broken', fbSevs: this.FB.sev.map(([k, l]) => chip(k, l, S.fbSev === k)), fbPh: this.FB.ph[kind],
+      fbShots: shots.map((src, i) => ({ src, i })), fbCanAdd: shots.length < 3, fbShotCount: `${shots.length} / 3`,
+      fbName: S.fbName ?? (() => { try { return localStorage.getItem('lds.fb.name') || ''; } catch (e) { return ''; } })(), fbIncl: S.fbIncl !== false,
+      fbSendLabel: S.fbBusy ? 'Sending…' : 'Send to W5',
+      fbMine: (S.fbMine || []).map(m => { const st = this.FB.status[m.status] || this.FB.status.new; return { id: m.id, kind: kindLab[m.kind] || 'Report', when: (m.at || '').slice(0, 10), st: st[0], bg: st[1], fg: st[2], reply: m.reply || '', hasReply: !!m.reply }; }), fbHasMine: (S.fbMine || []).length > 0,
+      toggleFb: () => { if (S.fbOpen || S.fbPicking) { if (S.fbPicking) this.endPick(null); else this.setState({ fbOpen: false }); } else this.startPick(); },
+      fbClose: () => this.setState({ fbOpen: false, fbSentId: '', fbShotLost: 0, fbErr: '' }),
+      fbRepick: () => this.startPick(), fbSkipPick: () => this.endPick(null),
+      onFbArea: e => this.setState({ fbArea: e.target.value }),
+      onFbKind: e => this.setState({ fbKind: e.currentTarget.dataset.k }),
+      onFbSev: e => { const k = e.currentTarget.dataset.k; this.setState(s => ({ fbSev: s.fbSev === k ? '' : k })); },
+      onFbText: e => this.setState({ fbText: e.target.value }),
+      onFbName: e => this.setState({ fbName: e.target.value }),
+      onFbIncl: e => this.setState({ fbIncl: e.target.checked }),
+      onFbFiles: e => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.addShots(fs); },
+      fbDelShot: e => { const i = +e.currentTarget.dataset.i; this.setState(s => ({ fbShots: (s.fbShots || []).filter((_, j) => j !== i) })); },
+      fbDrop: e => { e.preventDefault(); this.addShots(Array.from((e.dataTransfer && e.dataTransfer.files) || [])); }, fbDragOver: e => e.preventDefault(),
+      fbRefreshMine: () => this.refreshMine(),
+      sendFb: () => this.sendFeedback(text, cur.label)
+    };
+  }
+  startPick() {
+    if (this._fbBox) return;
+    this.setState({ fbOpen: false, fbPicking: true, fbSentId: '', fbErr: '' });
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;z-index:39;pointer-events:none;border:3px solid #f2b705;border-radius:6px;background:rgba(242,183,5,.12);display:none';
+    document.body.appendChild(box); this._fbBox = box;
+    const ui = el => el && el.closest && el.closest('[data-fb-ui]');
+    this._fbMove = e => { const el = document.elementFromPoint(e.clientX, e.clientY); if (!el || ui(el) || el === document.body) { box.style.display = 'none'; return; } const r = el.getBoundingClientRect(); Object.assign(box.style, { display: 'block', left: r.left - 3 + 'px', top: r.top - 3 + 'px', width: r.width + 6 + 'px', height: r.height + 6 + 'px' }); };
+    this._fbDown = e => { if (!ui(e.target)) e.preventDefault(); };
+    this._fbClick = e => { if (ui(e.target)) return; e.preventDefault(); e.stopPropagation(); this.endPick(e.target); };
+    this._fbKey = e => { if (e.key === 'Escape') this.endPick(null); };
+    document.addEventListener('pointermove', this._fbMove, true); document.addEventListener('pointerdown', this._fbDown, true);
+    document.addEventListener('click', this._fbClick, true); document.addEventListener('keydown', this._fbKey, true);
+  }
+  endPick(el) {
+    document.removeEventListener('pointermove', this._fbMove, true); document.removeEventListener('pointerdown', this._fbDown, true);
+    document.removeEventListener('click', this._fbClick, true); document.removeEventListener('keydown', this._fbKey, true);
+    if (this._fbBox) this._fbBox.remove(); this._fbBox = null;
+    if (!this._fbPaste) { this._fbPaste = e => { if (!this.state.fbOpen) return; const fs = Array.from((e.clipboardData && e.clipboardData.items) || []).filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean); if (fs.length) { e.preventDefault(); this.addShots(fs); } }; document.addEventListener('paste', this._fbPaste); }
+    const tg = el ? this.describe(el) : null;
+    this.setState(s => ({ fbPicking: false, fbOpen: true, fbTarget: tg || s.fbTarget || null, fbArea: tg ? tg.area : (s.fbArea || this.stepArea()) }));
+    this.refreshMine();
+  }
+  describe(el) {
+    const clean = x => String(x || '').replace(/\s+/g, ' ').trim();
+    const label = clean((el.getAttribute && (el.getAttribute('aria-label') || el.getAttribute('title'))) || el.innerText || el.value || el.placeholder || el.alt).slice(0, 120);
+    const aEl = el.closest('[data-fb-area]'), qEl = el.closest('[data-fb-q]'), area = aEl ? aEl.getAttribute('data-fb-area') : this.stepArea();
+    const path = []; for (let n = el, i = 0; n && n.nodeType === 1 && i < 5; i++, n = n.parentElement) path.unshift(n.tagName.toLowerCase() + (n.id ? '#' + n.id : ''));
+    return { label, area, section: [Object.fromEntries(this.FB.areas)[area], qEl && qEl.getAttribute('data-fb-q')].filter(Boolean).join(' › '), selector: path.join('>'), textSnippet: clean(el.innerText).slice(0, 200) };
+  }
+  async addShots(files) {
+    const cur = (this.state.fbShots || []).slice();
+    for (const f of files) { if (cur.length >= 3) break; if (!/^image\//.test(f.type || '')) continue; try { cur.push(await this.shrink(f)); } catch (e) {} }
+    this.setState({ fbShots: cur });
+  }
+  shrink(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.82)); };
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image')); };
+      img.src = url;
+    });
+  }
+  mine() { try { return JSON.parse(localStorage.getItem('lds.fb.mine') || '[]'); } catch (e) { return []; } }
+  async refreshMine() {
+    const m = this.mine(); if (!m.length) { this.setState({ fbMine: [] }); return; }
+    if (!(this.state.fbMine || []).length) this.setState({ fbMine: m });
+    try { const r = await window.DB.feedbackStatus(m.map(x => ({ id: x.id, key: x.key }))); const by = {}; (r.items || []).forEach(i => { by[i.id] = i; }); this.setState({ fbMine: m.map(x => ({ ...x, status: (by[x.id] || {}).status || 'new', reply: (by[x.id] || {}).reply || '' })) }); } catch (e) {}
+  }
+  async sendFeedback(summary, stepLabel) {
+    const S = this.state, t = (S.fbText || '').trim();
+    if (!t) { this.setState({ fbErr: 'Add a few words about it.' }); return; }
+    if (!window.DB || !window.DB.feedback) { this.setState({ fbErr: 'The feedback service is not reachable from this page.' }); return; }
+    if (S.fbBusy) return;
     this.setState({ fbBusy: true, fbErr: '' });
+    const tg = S.fbTarget || {}, kind = S.fbKind || 'suggestion', name = (S.fbName ?? (localStorage.getItem('lds.fb.name') || '')).trim();
     try {
-      await window.DB.feedback({ kind: this.state.fbKind || 'Other', text: t, summary, step, ua: navigator.userAgent, appVersion: (window.DB_CONFIG || {}).appVersion || '', from: window.DB.me && window.DB.me() ? window.DB.me().email : '' });
-      this.setState({ fbBusy: false, fbSent: true, fbText: '', fbKind: '' });
-    } catch (e) { this.setState({ fbBusy: false, fbErr: e.message }); }
+      try { localStorage.setItem('lds.fb.name', name); } catch (e) {}
+      const r = await window.DB.feedback({ kind, area: S.fbArea || this.stepArea(), severity: kind === 'broken' ? (S.fbSev || '') : '', text: t, from: name,
+        target: { label: tg.label || '', section: tg.section || '', step: stepLabel, selector: tg.selector || '', textSnippet: tg.textSnippet || '' },
+        page: { url: location.href.split('#')[0], viewport: window.innerWidth + '×' + window.innerHeight, build: (window.DB_CONFIG || {}).appVersion || '', ua: navigator.userAgent },
+        summary: S.fbIncl === false ? '' : summary, shots: S.fbShots || [] });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'unknown');
+      const mine = [{ id: r.id, key: r.key, at: new Date().toISOString(), kind }].concat(this.mine()).slice(0, 20);
+      try { localStorage.setItem('lds.fb.mine', JSON.stringify(mine)); } catch (e) {}
+      this.setState(s => ({ fbBusy: false, fbSentId: r.id, fbShotLost: Math.max(0, (r.shotsSent || 0) - (r.shots || 0)), fbText: '', fbShots: [], fbTarget: null, fbSev: '', fbMine: [{ ...mine[0], status: 'new', reply: '' }].concat((s.fbMine || []).filter(x => x.id !== r.id)) }));
+    } catch (e) {
+      const m = String(e.message || e);
+      this.setState({ fbBusy: false, fbErr: m === 'empty' ? 'Add a few words about it.' : m === 'busy' ? 'Lots of reports right now — please try again in a minute.' : /fetch|network|load failed/i.test(m) ? 'Could not reach the W5 service. Check your connection and try again.' : 'Could not send it (' + m + '). Please try again.' });
+    }
   }
 
   copyText(t) {
