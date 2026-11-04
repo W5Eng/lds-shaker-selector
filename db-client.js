@@ -4,12 +4,13 @@
 (function (root) {
   if (root.DB && root.DB.__v) return; // script may execute twice (streaming + final); keep the first instance
   var cfg = root.DB_CONFIG || {};
-  var state = { db: null, mode: 'public', pending: [], subs: [], ready: null, err: null, polling: null, me: null, idToken: null };
+  var state = { db: null, mode: 'public', pending: [], subs: [], ready: null, err: null, polling: null, me: null, idToken: null, ticket: null };
   var CACHE = (cfg.cachePrefix || 'lds.') + 'db.cache';
 
   function call(endpoint, body) {
     if (!endpoint) return Promise.reject(new Error('Database not connected — open the Workbench → Connect.'));
     if (state.idToken) body.idToken = state.idToken; // held in memory only, never stored
+    if (state.ticket) body.ticket = state.ticket;
     return fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), redirect: 'follow' })
       .then(function (r) { return r.text(); })
       .then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { throw new Error('Server returned non-JSON (check deployment access)'); } if (j.error) throw new Error(j.error); return j; });
@@ -32,7 +33,8 @@
   var DB = {
     __v: 1,
     setIdToken: function (t) { state.idToken = t || null; state.ready = null; },
-    signedIn: function () { return !!state.idToken; },
+    setTicket: function (t) { state.ticket = t || null; state.ready = null; },
+    signedIn: function () { return !!(state.idToken || state.ticket); },
     configure: function (o) { Object.assign(cfg, o || {}); if (o && o.mode) state.mode = o.mode; return DB; },
     connected: function () { return !!(state.mode === 'staff' ? cfg.admin : cfg.read); },
     endpoint: function () { return state.mode === 'staff' ? cfg.admin : cfg.read; },
@@ -73,10 +75,22 @@
     history: function () { return call(cfg.admin, { action: 'history' }); },
     activate: function (id) { return call(cfg.admin, { action: 'activate', id: id }).then(function (j) { state.db = j.db; writeCache(j.db); emit(); return j.db; }); },
     seed: function (doc) { return call(cfg.admin, { action: 'seed', doc: doc }).then(function (j) { state.db = j.db; writeCache(j.db); emit(); return j.db; }); },
-    publishStatus: function () { return call(cfg.admin, { action: 'publish-status' }); },
-    publishPage: function (html, note) { return call(cfg.admin, { action: 'publish-page', html: html, note: note }); },
+    publishStatus: function (fresh) { return call(cfg.admin, { action: 'publish-status', fresh: !!fresh }); },
+    publishFile: function (target, content, note, confirmSmall) { return call(cfg.admin, { action: 'publish-file', target: target, content: content, note: note, confirmSmall: !!confirmSmall }); },
+    publishFileB64: function (target, b64, note, confirmSmall) { return call(cfg.admin, { action: 'publish-file', target: target, contentB64: b64, note: note, confirmSmall: !!confirmSmall }); },
+    publishViewer: function (html, note, confirmSmall) { return call(cfg.admin, { action: 'publish-viewer', html: html, note: note, confirmSmall: !!confirmSmall }); },
+    releaseRecord: function (target, content, note) { return call(cfg.admin, { action: 'release-record', target: target, content: content, note: note }); },
+    releaseGet: function (id) { return call(cfg.admin, { action: 'release-get', id: id }); },
+    publishPage: function (html, note) { return call(cfg.admin, { action: 'publish-viewer', html: html, note: note }); },
     publishRevert: function (id, note) { return call(cfg.admin, { action: 'publish-revert', id: id, note: note }); },
     feedback: function (fb) { return call(cfg.read || cfg.admin, { action: 'feedback', feedback: fb }); },
+    feedbackStatus: function (items) { return call(cfg.read || cfg.admin, { action: 'feedback-status', items: items }); },
+    feedbackShot: function (fileId) { return call(cfg.admin, { action: 'feedback-shot', fileId: fileId }); },
+    feedbackReview: function (id, brief) { return call(cfg.admin, { action: 'feedback-review', id: id, brief: brief }); },
+    assist: function (messages, callText) { return call(cfg.read || cfg.admin, { action: 'assist', messages: messages, call: callText }); },
+    hbkSubmit: function (a) { return call(cfg.read || cfg.admin, { action: 'hbk-submit', answer: a }); },
+    hbkGet: function (id, key) { return call(cfg.read || cfg.admin, { action: 'hbk-get', id: id, key: key }); },
+    hbkRevise: function (a) { return call(cfg.read || cfg.admin, { action: 'hbk-revise', answer: a }); },
     ping: function (which) { return call(which === 'admin' ? cfg.admin : cfg.read, { action: 'ping' }); }
   };
   root.DB = DB;
