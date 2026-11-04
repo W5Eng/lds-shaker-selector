@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
@@ -11,6 +13,8 @@
 <script src="./db-config.js"></script>
 <script src="./guard.js"></script>
 <script src="./db-client.js"></script>
+<script src="./hbk-sheet.js"></script>
+<script src="./hbk-questions.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>body{margin:0;background:#0f1216;color:#e6e8eb}*{box-sizing:border-box}input,select,textarea,button{font:inherit}a{color:#8ab4f8}a:hover{color:#b3ccfa}</style>
@@ -31,8 +35,18 @@
       <span style="padding:3px 10px;border-radius:999px;background:{{ status.bg }};color:{{ status.fg }};font-weight:600">{{ status.label }}</span>
       <span style="font-family:'IBM Plex Mono',monospace">{{ status.detail }}</span>
       <sc-if value="{{ me }}"><span>· signed in as {{ me }}</span></sc-if>
-      <div ref="{{ btnRef }}" style="margin-left:auto;min-height:40px"></div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <sc-if value="{{ showTicket }}"><button onClick="{{ ticketLogin }}" style="border:1px solid #8ab4f8;background:transparent;color:#8ab4f8;border-radius:999px;padding:6px 14px;min-height:38px;cursor:pointer;font-weight:500">Staff sign-in</button></sc-if>
+        <div ref="{{ btnRef }}" style="min-height:40px"></div>
+      </div>
     </div>
+    <sc-if value="{{ ticketPaste }}">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#161a20;border:1px solid #262c35;border-radius:10px;padding:10px 12px">
+        <span style="font-size:13px;color:#c5cad1">Paste the ticket from the sign-in window:</span>
+        <input value="{{ ticketText }}" onInput="{{ onTicketText }}" style="flex:1 1 240px;min-width:0;padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;font-family:'IBM Plex Mono',monospace;font-size:12px;min-height:38px">
+        <button onClick="{{ useTicket }}" style="border:0;background:#8ab4f8;color:#0f1216;border-radius:8px;padding:8px 14px;min-height:38px;cursor:pointer;font-weight:600">Use ticket</button>
+      </div>
+    </sc-if>
     <sc-if value="{{ authMsg }}"><div style="background:#3a2a12;color:#f2c46d;border-radius:10px;padding:10px 12px;font-size:13px;white-space:pre-wrap">{{ authMsg }}</div></sc-if>
 
     <sc-if value="{{ isConnect }}">
@@ -114,24 +128,116 @@
       </div>
     </sc-if>
 
+    <sc-if value="{{ isFb }}">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-size:16px">Beta testers’ reports</span><span style="font-size:13px;color:#8a93a0">{{ fbIntro }}</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onClick="{{ fbReviewNew }}" style="border:1px solid #6b4fa8;background:#221a33;color:#d7c8ff;border-radius:8px;padding:6px 12px;min-height:36px;cursor:pointer;font-size:13px">✦ Suggest fixes for new</button>
+            <button onClick="{{ fbReload }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 12px;min-height:36px;cursor:pointer;font-size:13px">↻ Refresh</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <sc-for list="{{ fbChips }}" as="c" hint-placeholder-count="5"><button data-c="{{ c.val }}" onClick="{{ fbOnChip }}" style="border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};border-radius:999px;padding:5px 12px;min-height:32px;cursor:pointer;font-size:12px">{{ c.label }} <span style="font-family:'IBM Plex Mono',monospace;opacity:.7">{{ c.n }}</span></button></sc-for>
+          <select value="{{ fbAreaF }}" onChange="{{ fbOnAreaF }}" style="padding:6px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:34px;font-size:13px"><sc-for list="{{ fbAreaOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.val }}">{{ o.label }}</option></sc-for></select>
+          <select value="{{ fbKindF }}" onChange="{{ fbOnKindF }}" style="padding:6px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:34px;font-size:13px"><sc-for list="{{ fbKindOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.val }}">{{ o.label }}</option></sc-for></select>
+        </div>
+        <sc-if value="{{ fbEmpty }}"><div style="background:#161a20;border:1px dashed #2c3440;border-radius:12px;padding:16px;color:#c5cad1;font-size:14px">No reports here. Send testers the beta link: <a href="{{ fbBetaUrl }}" target="_blank" rel="noopener">{{ fbBetaUrl }}</a></div></sc-if>
+        <sc-for list="{{ fbRows }}" as="r" hint-placeholder-count="3">
+          <div style="background:#161a20;border:1px solid {{ r.bd }};border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.06em;padding:3px 8px;border-radius:6px;background:{{ r.kBg }};color:{{ r.kFg }}">{{ r.kLabel }}</span>
+              <span style="font-size:13px;color:#e6e8eb;font-weight:500">{{ r.area }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8ab4f8">{{ r.id }}</span>
+              <span style="font-size:12px;color:#8a93a0">{{ r.when }} · {{ r.from }}</span>
+              <span style="margin-left:auto;font-size:12px;padding:3px 10px;border-radius:999px;background:{{ r.sBg }};color:{{ r.sFg }}">{{ r.sLabel }}</span>
+            </div>
+            <sc-if value="{{ r.hasWhere }}"><div style="font-size:13px;color:#c5cad1"><span style="color:#8a93a0">Pointed at:</span> {{ r.where }}</div></sc-if>
+            <div style="font-size:15px;line-height:1.5;color:#f1f3f5;white-space:pre-wrap;text-wrap:pretty">{{ r.text }}</div>
+            <sc-if value="{{ r.hasShots }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ r.shots }}" as="s" hint-placeholder-count="0">
+                  <button data-id="{{ s.id }}" onClick="{{ fbOpenShot }}" style="width:120px;height:90px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;overflow:hidden;padding:0;cursor:pointer;color:#8a93a0;font-size:12px">
+                    <sc-if value="{{ s.loaded }}" hint-placeholder-val="{{ false }}"><span style="display:block;width:100%;height:100%;background-image:url({{ s.src }});background-size:cover;background-position:center"></span></sc-if>
+                    <sc-if value="{{ s.notLoaded }}"><span>{{ s.label }}</span></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ r.shotWarn }}"><div style="font-size:12px;color:#f2c46d">{{ r.shotWarn }}</div></sc-if>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a93a0;overflow-wrap:anywhere">{{ r.meta }}</div>
+            <sc-if value="{{ r.hasSummary }}">
+              <details style="font-size:13px;color:#c5cad1"><summary style="cursor:pointer;color:#8ab4f8">Call details at the time</summary><pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;background:#0f1216;border:1px solid #262c35;border-radius:8px;padding:10px;margin:8px 0 0;max-height:320px;overflow:auto">{{ r.summary }}</pre></details>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:10px">
+              <label style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#8a93a0">Status</span>
+                <select data-id="{{ r.id }}" data-k="status" value="{{ r.status }}" onChange="{{ fbOnSel }}" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px"><sc-for list="{{ fbStatOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.val }}">{{ o.label }}</option></sc-for></select>
+              </label>
+              <sc-if value="{{ r.isDup }}"><label style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#8a93a0">Duplicate of</span>
+                <select data-id="{{ r.id }}" data-k="duplicateOf" value="{{ r.duplicateOf }}" onChange="{{ fbOnSel }}" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px"><sc-for list="{{ r.dupOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.val }}">{{ o.label }}</option></sc-for></select>
+              </label></sc-if>
+              <sc-if value="{{ r.isDone }}"><label style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#8a93a0">Fixed in release</span>
+                <select data-id="{{ r.id }}" data-k="fixedIn" value="{{ r.fixedIn }}" onChange="{{ fbOnSel }}" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;min-height:38px"><sc-for list="{{ fbRelOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.val }}">{{ o.label }}</option></sc-for></select>
+              </label></sc-if>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:10px">
+              <label style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#8a93a0">Reply to tester <span style="color:#f2c46d">· they see this in the app</span></span>
+                <textarea data-id="{{ r.id }}" data-k="reply" value="{{ r.reply }}" onInput="{{ fbOnDraft }}" onBlur="{{ fbOnBlur }}" rows="2" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;font-size:14px;resize:vertical"></textarea>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#8a93a0">Internal note</span>
+                <textarea data-id="{{ r.id }}" data-k="notes" value="{{ r.notes }}" onInput="{{ fbOnDraft }}" onBlur="{{ fbOnBlur }}" rows="2" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;font-size:14px;resize:vertical"></textarea>
+              </label>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button data-id="{{ r.id }}" onClick="{{ fbOnReview }}" style="border:1px solid #6b4fa8;background:#221a33;color:#d7c8ff;border-radius:8px;padding:6px 12px;min-height:36px;cursor:pointer;font-size:13px">{{ r.aiBtn }}</button>
+              <button data-id="{{ r.id }}" onClick="{{ fbOnTask }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 12px;min-height:36px;cursor:pointer;font-size:13px">Copy as task</button>
+            </div>
+            <sc-if value="{{ r.hasAi }}">
+              <div style="background:#1d1729;border:1px solid #3d2f5c;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#6b4fa8;color:#ffffff">{{ r.ai.typeLabel }}</span>
+                  <span style="font-size:14px;color:#efe9ff;font-weight:500">{{ r.ai.summary }}</span>
+                  <button data-id="{{ r.id }}" onClick="{{ fbOnClearAi }}" style="margin-left:auto;border:0;background:transparent;color:#a99bd0;cursor:pointer;font-size:12px">clear</button>
+                </div>
+                <sc-if value="{{ r.ai.where }}"><div style="font-size:13px;color:#cfc4ee"><span style="color:#a99bd0">Where:</span> {{ r.ai.where }}</div></sc-if>
+                <sc-for list="{{ r.ai.steps }}" as="st" hint-placeholder-count="2"><div style="font-size:13px;color:#e6e0f7;display:flex;gap:8px"><span style="color:#a99bd0;font-family:'IBM Plex Mono',monospace">{{ st.n }}</span><span>{{ st.t }}</span></div></sc-for>
+                <sc-if value="{{ r.ai.question }}"><div style="font-size:13px;color:#f2c46d">Ask the tester: {{ r.ai.question }}</div></sc-if>
+                <div style="font-size:11px;color:#a99bd0;font-family:'IBM Plex Mono',monospace">{{ r.ai.meta }}</div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
     <sc-if value="{{ isPublish }}">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px">
-        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-weight:600;font-size:16px">Publish the public page</span><button onClick="{{ pubRefresh }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">↻ Refresh</button></div>
-          <div style="display:flex;flex-direction:column;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#c5cad1;overflow-wrap:anywhere">
-            <span>repo: {{ pub.repo }} · branch {{ pub.branch }} · file {{ pub.path }}</span>
-            <span style="color:{{ pub.tokCol }}">{{ pub.tok }}</span>
-            <sc-if value="{{ pub.site }}"><a href="{{ pub.site }}" target="_blank" rel="noopener">{{ pub.site }}</a></sc-if>
+        <div style="grid-column:1/-1;background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-size:16px">Publish files to GitHub</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a93a0;overflow-wrap:anywhere">{{ pub.repo }} · {{ pub.branch }} · <span style="color:{{ pub.tokCol }}">{{ pub.tok }}</span></span></span>
+            <span style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ pubRefresh }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:36px;cursor:pointer;font-size:12px">↻ Refresh</button>
+              <button onClick="{{ pfAll }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:36px;cursor:pointer;font-size:12px">{{ pfAllLabel }}</button>
+              <button onClick="{{ pfGo }}" style="border:0;background:{{ pfGoBg }};color:#0f1216;border-radius:8px;padding:8px 14px;min-height:36px;cursor:pointer;font-weight:600;font-size:13px">{{ pfGoLabel }}</button>
+            </span>
           </div>
-          <div style="font-size:13px;color:#c5cad1;border-top:1px solid #262c35;padding-top:10px">Build: <span style="font-family:'IBM Plex Mono',monospace;color:{{ pub.buildCol }}">{{ pub.build }}</span></div>
-          <sc-if value="{{ pub.needPick }}">
-            <div style="font-size:12px;color:#8a93a0">This page can’t read the project build directly. Pick the <code>app.html</code> Claude gave you:</div>
-            <input type="file" accept=".html" onChange="{{ onBuildFile }}" style="color:#c5cad1">
-          </sc-if>
-          <textarea value="{{ relNote }}" onInput="{{ onRelNote }}" rows="3" placeholder="What changed, in plain words (Claude pre-fills this)" style="padding:8px 10px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;resize:vertical"></textarea>
-          <button onClick="{{ publish }}" style="border:0;background:#8ab4f8;color:#0f1216;border-radius:8px;padding:10px 14px;min-height:42px;cursor:pointer;font-weight:600">Publish to GitHub</button>
-          <div style="font-size:13px;color:#c5cad1;white-space:pre-wrap">{{ pubMsg }}</div>
-          <div style="font-size:12px;color:#8a93a0">Workbench, Inspector and server code are not published this way. Server changes: paste into Apps Script → Manage deployments → New version.</div>
+          <sc-if value="{{ pfNote }}"><div style="font-size:13px;color:#f2c46d">{{ pfNote }}</div></sc-if>
+          <sc-for list="{{ pfRows }}" as="f" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:10px 0;border-top:1px solid #20262e;align-items:start">
+              <input type="checkbox" data-n="{{ f.name }}" checked="{{ f.on }}" onChange="{{ pfTick }}" style="width:18px;height:18px;margin-top:2px;cursor:pointer">
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline">
+                  <span style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;min-width:0"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:#e6e8eb;overflow-wrap:anywhere">{{ f.name }}</span><span style="font-size:12px;color:#8a93a0">{{ f.desc }}</span></span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ f.sizeCol }}">{{ f.size }}</span>
+                </div>
+                <textarea data-n="{{ f.name }}" value="{{ f.note }}" onInput="{{ pfNoteEdit }}" rows="1" placeholder="Release note" style="padding:6px 8px;border:1px solid #2c3440;border-radius:8px;background:#0f1216;color:#e6e8eb;resize:vertical;font-size:13px;min-height:34px"></textarea>
+                <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px">
+                  <span style="color:#8a93a0">{{ f.noteSrc }}</span>
+                  <span style="display:flex;gap:8px;align-items:center;color:{{ f.resCol }}">{{ f.res }}<sc-if value="{{ f.url }}"><a href="{{ f.url }}" target="_blank" rel="noopener">commit ↗</a></sc-if></span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+          <div style="font-size:12px;color:#8a93a0">Each file is its own commit, sent one after another. GitHub keeps every earlier version. Server code (Apps Script) is deployed by hand.</div>
         </div>
         <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:6px">
           <div style="font-weight:600;font-size:16px">Releases</div>
@@ -145,6 +251,129 @@
             </div>
           </sc-for>
           <sc-if value="{{ noReleases }}"><div style="color:#8a93a0;font-size:13px">Nothing published yet.</div></sc-if>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isHbk }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:14px;align-items:start">
+          <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:#8a93a0">STEP 1 · ASK HBK</div>
+            <div style="font-weight:600;font-size:16px">Download the data-check file</div>
+            <div style="font-size:13px;color:#c5cad1;text-wrap:pretty">An Excel file built from the live database: every head expander and shaker system with our current values, orange cells where we have nothing, Type and Status dropdowns, metric columns for comparison, and blank rows for models we don't list (e.g. guided head expanders). HBK types over anything wrong — their changes turn yellow.</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8ab4f8">{{ hbkStats }}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ hbkDownload }}" style="border:0;background:#8ab4f8;color:#0f1216;border-radius:8px;padding:10px 16px;min-height:42px;cursor:pointer;font-weight:600">Download .xlsx for HBK</button>
+            </div>
+            <div style="font-size:12px;color:#8a93a0">Email it to HBK. The Start-here tab explains everything; the return address is the specialist in W5 links.</div>
+          </div>
+          <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:#8a93a0">STEP 2 · IMPORT THEIR ANSWERS</div>
+            <div style="font-weight:600;font-size:16px">Upload the returned file</div>
+            <div style="font-size:13px;color:#c5cad1;text-wrap:pretty">Nothing is saved until you review. You'll see every changed value (ours → HBK's), new models, discontinued rows and comments, each with a checkbox.</div>
+            <label style="display:flex;align-items:center;justify-content:center;border:1px dashed #3a4250;border-radius:10px;padding:16px;cursor:pointer;color:#e6e8eb;font-size:14px;min-height:56px">
+              <input type="file" accept=".xlsx" onChange="{{ hbkFile }}" style="display:none">
+              Choose HBK's .xlsx…
+            </label>
+          </div>
+        </div>
+        <sc-if value="{{ hbkMsg }}"><div style="font-size:13px;color:{{ hbkMsgCol }}">{{ hbkMsg }}</div></sc-if>
+        <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:#8a93a0">QUESTIONNAIRE RESPONSES</div>
+              <div style="font-weight:600;font-size:16px">Questions for HBK / LDS · {{ hqCount }}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <a href="{{ hqLink }}" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono',monospace;font-size:12px">{{ hqLink }}</a>
+              <button data-u="{{ hqLink }}" onClick="{{ copyLink }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:32px;cursor:pointer;font-size:12px">Copy link</button>
+            </div>
+          </div>
+          <sc-if value="{{ hqNone }}"><div style="font-size:13px;color:#8a93a0">No responses yet. Send HBK the link above.</div></sc-if>
+          <sc-for list="{{ hqList }}" as="h" hint-placeholder-count="0">
+            <div style="border-top:1px solid #20262e;padding-top:10px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline">
+                <span style="font-size:14px;font-weight:600;color:#e6e8eb">{{ h.id }} · {{ h.who }}</span>
+                <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a93a0">{{ h.dates }}</span>
+                  <select data-id="{{ h.id }}" value="{{ h.status }}" onChange="{{ hqStatus }}" style="padding:4px 6px;border:1px solid #2c3440;border-radius:6px;background:#0f1216;color:#e6e8eb;font-size:12px">
+                    <option value="submitted">submitted</option><option value="revised">revised</option><option value="reviewed">reviewed</option><option value="applied">applied</option>
+                  </select>
+                </span>
+              </div>
+              <sc-for list="{{ h.answers }}" as="a" hint-placeholder-count="0">
+                <div style="display:flex;gap:10px;font-size:13px;min-width:0"><span style="flex:0 0 auto;font-family:'IBM Plex Mono',monospace;color:#8ab4f8;width:28px">{{ a.q }}</span><span style="flex:0 0 auto;color:#8a93a0;width:150px">{{ a.title }}</span><span style="color:#e6e8eb;overflow-wrap:anywhere;min-width:0">{{ a.text }}</span></div>
+              </sc-for>
+              <sc-for list="{{ h.revs }}" as="v" hint-placeholder-count="0">
+                <div style="font-size:12px;color:#f2c46d;overflow-wrap:anywhere">Edit #{{ v.n }} · {{ v.who }} · {{ v.at }} — {{ v.reason }} ({{ v.qs }})</div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hbkHas }}">
+          <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-weight:600;font-size:16px">Review HBK's answers</div>
+                <div style="font-size:13px;color:#8a93a0">{{ hbkSummary }}</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button data-v="1" onClick="{{ hbkAll }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">Select all</button>
+                <button data-v="0" onClick="{{ hbkAll }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">Select none</button>
+                <button onClick="{{ hbkApply }}" style="border:0;background:#8ab4f8;color:#0f1216;border-radius:8px;padding:8px 14px;min-height:38px;cursor:pointer;font-weight:600">{{ hbkApplyLabel }}</button>
+              </div>
+            </div>
+            <sc-if value="{{ hbkHasWarn }}">
+              <div style="display:flex;flex-direction:column;gap:4px;background:#2a2112;border:1px solid #5a4520;border-radius:10px;padding:10px 12px">
+                <sc-for list="{{ hbkWarn }}" as="x" hint-placeholder-count="0"><div style="font-size:13px;color:#f2c46d">{{ x.t }}</div></sc-for>
+              </div>
+            </sc-if>
+            <sc-for list="{{ hbkGroups }}" as="g" hint-placeholder-count="0">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8a93a0;padding-bottom:4px">{{ g.title }}</div>
+                <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="0">
+                  <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid #20262e;cursor:pointer;min-width:0">
+                    <input type="checkbox" checked="{{ it.on }}" data-k="{{ it.k }}" onChange="{{ hbkToggle }}" style="width:18px;height:18px;margin-top:2px;flex:0 0 auto">
+                    <span style="flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline">
+                      <span style="font-size:14px;font-weight:500;color:#e6e8eb">{{ it.name }}</span>
+                      <span style="font-size:12px;color:#8a93a0">{{ it.where }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#c5cad1;overflow-wrap:anywhere">{{ it.what }}</span>
+                    </span>
+                  </label>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isPlatform }}">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:16px">Platform links</span>
+          <button onClick="{{ pubRefresh }}" style="border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:34px;cursor:pointer;font-size:12px">↻ Refresh</button>
+        </div>
+        <sc-if value="{{ platNote }}"><div style="font-size:13px;color:#f2c46d">{{ platNote }}</div></sc-if>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:14px">
+          <sc-for list="{{ platGroups }}" as="g" hint-placeholder-count="4">
+            <div style="background:#161a20;border:1px solid #262c35;border-radius:12px;padding:14px 16px;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8a93a0;margin-bottom:4px">{{ g.title }}</div>
+              <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #20262e;min-width:0">
+                  <div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:14px;color:#e6e8eb;font-weight:500">{{ it.label }}</span>
+                    <sc-if value="{{ it.has }}"><a href="{{ it.url }}" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono',monospace;font-size:11px;overflow-wrap:anywhere">{{ it.url }}</a></sc-if>
+                    <sc-if value="{{ it.missing }}"><span style="font-size:12px;color:#8a93a0">not available yet</span></sc-if>
+                    <sc-if value="{{ it.note }}"><span style="font-size:12px;color:#8a93a0">{{ it.note }}</span></sc-if>
+                  </div>
+                  <sc-if value="{{ it.has }}">
+                    <a href="{{ it.url }}" target="_blank" rel="noopener" style="flex:0 0 auto;border:1px solid #2c3440;border-radius:8px;padding:6px 10px;font-size:12px;text-decoration:none;color:#e6e8eb">Open</a>
+                    <button data-u="{{ it.url }}" onClick="{{ copyLink }}" style="flex:0 0 auto;border:1px solid #2c3440;background:#0f1216;color:#e6e8eb;border-radius:8px;padding:6px 10px;min-height:32px;cursor:pointer;font-size:12px">Copy</button>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
         </div>
       </div>
     </sc-if>
@@ -180,11 +409,9 @@ class Component extends DCLogic {
   TABLES = {
     library: { table: 'systems', label: 'Library', title: r => r.name, sub: r => `${r.shaker} · ${r.amp} · sine ${r.sine ?? '—'} lbf · ${r.phase || '?'} · lead ${r.leadMin ?? '?'}–${r.leadMax ?? '?'} wk`, chipKey: 'shaker',
       fields: [['name', 'System name'], ['shaker', 'Shaker'], ['armature', 'Armature (mm)', 'num'], ['amp', 'Amplifier'], ['sine', 'Sine force (lbf pk)', 'num'], ['random', 'Random force (lbf rms)', 'num'], ['shock', 'Half-sine shock force (lbf pk)', 'num'], ['disp', 'Displacement (in pk-pk)', 'num'], ['vel', 'Sine velocity (in/s pk)', 'num'], ['shockVel', 'Shock velocity (in/s pk)', 'num'], ['sineAcc', 'Sine accel bare table (g pk)', 'num'], ['randAcc', 'Random accel bare table (Grms)', 'num'], ['arm', 'Armature weight (lb)', 'num'], ['load', 'Static load support (lb)', 'num'], ['fmin', 'Min freq (Hz)', 'num'], ['fmax', 'Max freq (Hz)', 'num'], ['res', 'Armature resonance (Hz)', 'num'], ['dia', 'Armature dia (in)', 'num'], ['phase', 'Power', 'select', ['1ph', '3ph']], ['leadMin', 'Lead time min (wk)', 'num'], ['leadMax', 'Lead time max (wk)', 'num'], ['src', 'Source datasheet'], ['notes', 'Notes (memo only)', 'area']] },
-    heads: { table: 'headExpanders', label: 'Head expanders', title: r => r.name, sub: r => `${r.wt} lb · barrier ${r.tb} lb · 1st mode ${r.mode ?? '—'} Hz`, fields: [['name', 'Name'], ['wt', 'Weight (lb)', 'num'], ['tb', 'Thermal barrier weight (lb)', 'num'], ['mode', '1st vertical mode (Hz)', 'num'], ['fits', 'Compatible shakers']] },
+    heads: { table: 'headExpanders', label: 'Head expanders', title: r => r.name, sub: r => `${r.guide || 'type not set'} · ${r.wt} lb · barrier ${r.tb} lb · 1st mode ${r.mode ?? '—'} Hz`, fields: [['name', 'Name'], ['wt', 'Weight (lb)', 'num'], ['tb', 'Thermal barrier weight (lb)', 'num'], ['mode', '1st vertical mode (Hz)', 'num'], ['fits', 'Compatible shakers'], ['guide', 'Type', 'select', ['unguided', 'guided']]] },
     kb: { table: 'kb', label: 'Knowledge', title: r => r.title, sub: r => (r.body || '').slice(0, 90), chipKey: 'audience', fields: [['title', 'Title'], ['order', 'Order', 'num'], ['audience', 'Audience', 'select', ['all', 'staff']], ['body', 'Body (markdown, one fact per line)', 'area']] },
-    links: { table: 'links', label: 'W5 links', title: r => r.label, sub: r => r.url, chipKey: 'topic', fields: [['label', 'Label'], ['url', 'URL'], ['topic', 'Topic', 'select', ['general', 'shaker', 'chamber', 'sensors', 'controller', 'daq', 'service']]] },
-    feedback: { table: 'feedback', label: 'Feedback', title: r => `${r.kind} — ${(r.text || '').slice(0, 70)}`, sub: r => `${r.at ? r.at.slice(0, 16).replace('T', ' ') : ''} · step ${r.step || '—'} · ${r.appVersion || ''} · ${r.from || 'anonymous'}`, chipKey: 'status', tag: r => r.status, noAdd: true,
-      fields: [['status', 'Status', 'select', ['new', 'triaged', 'fixed', 'wontfix']], ['kind', 'Kind'], ['text', 'Report', 'area'], ['reply', 'Internal reply / fix note', 'area'], ['summary', 'Call summary attached', 'area'], ['ua', 'Browser']] }
+    links: { table: 'links', label: 'W5 links', title: r => r.label, sub: r => r.url, chipKey: 'topic', fields: [['label', 'Label'], ['url', 'URL'], ['topic', 'Topic', 'select', ['general', 'shaker', 'chamber', 'sensors', 'controller', 'daq', 'service', 'specialist']]] }
   };
   btnRef = React.createRef();
   componentDidMount() {
@@ -192,8 +419,22 @@ class Component extends DCLogic {
     this.unsub = window.DB.subscribe(() => this.forceUpdate());
     this.initSignIn();
   }
+  applyTicket(t) {
+    t = String(t || '').trim(); if (!t) return;
+    window.DB.setTicket(t);
+    this.setState({ ticketPaste: false, ticketText: '', authMsg: '' });
+    window.DB.ready().then(() => this.say('Signed in with staff ticket (valid 12 h).')).catch(e => { window.DB.setTicket(null); this.say('Ticket rejected: ' + e.message, true); });
+  }
+  ticketLogin() {
+    const u = (window.DB_CONFIG || {}).loginUrl;
+    if (!u) { this.setState({ authMsg: 'Staff sign-in not configured: add loginUrl (the second deployment) to db-config.js.' }); return; }
+    if (!this._msgBound) { this._msgBound = true; window.addEventListener('message', ev => { if (ev.data && ev.data.ldsTicket && /^https:\/\/script\.google(usercontent)?\.com$|\.googleusercontent\.com$/.test(ev.origin)) this.applyTicket(ev.data.ldsTicket); }); }
+    window.open(u + (u.includes('?') ? '&' : '?') + 'login=1&origin=' + encodeURIComponent(location.origin), 'lds-login', 'width=560,height=520');
+    this.setState({ ticketPaste: true });
+  }
   initSignIn() {
     const cid = (window.DB_CONFIG || {}).googleClientId;
+    if (/claudeusercontent\.com$/.test(location.hostname)) { this.setState({ authMsg: 'Here, use Staff sign-in (Google’s button only works on the live site).' }); return; }
     if (!cid) { this.setState({ authMsg: 'Sign-in not configured: add googleClientId to db-config.js (Google Cloud → Credentials → OAuth client ID, Web). Authorized JavaScript origin: ' + location.origin }); return; }
     const go = (n = 0) => {
       const g = window.google && window.google.accounts && window.google.accounts.id;
@@ -212,6 +453,118 @@ class Component extends DCLogic {
     window.DB.ready().then(() => this.say('Signed in and loaded.')).catch(e => this.say(e.message, true));
   }
   componentWillUnmount() { if (this.unsub) this.unsub(); }
+  componentDidUpdate() { if (this.state.tab === 'feedback') this.loadShots(); }
+  // ---------- feedback ----------
+  FBX = {
+    areas: { coach: 'Call coach', questions: 'Questions & answers', profile: 'Test levels', recommendation: 'Recommendation & sizing', addons: 'Add-ons', assistant: 'Ask W5 assistant', summary: 'Summary / email', layout: 'Layout / phone', other: 'Something else' },
+    kinds: { broken: ['BROKEN', '#4a1f1f', '#f28b82'], wrong: ['WRONG INFO', '#3a2a12', '#f2c46d'], suggestion: ['SUGGESTION', '#1c2b45', '#8ab4f8'], question: ['QUESTION', '#262c35', '#c5cad1'] },
+    legacyKind: { Bug: 'broken', 'Wrong recommendation': 'wrong', 'Missing question': 'suggestion', Idea: 'suggestion', Other: 'suggestion' },
+    sev: { blocker: 'stops me', annoying: 'gets in the way', minor: 'minor' },
+    status: [['new', 'New'], ['triaged', 'Triaged'], ['planned', 'Planned'], ['done', 'Done'], ['declined', 'Declined'], ['duplicate', 'Duplicate']],
+    legacyStatus: { fixed: 'done', wontfix: 'declined' },
+    open: ['new', 'triaged', 'planned']
+  };
+  FB_BRIEF = 'You review beta feedback for the W5 Engineering LDS Shaker Selector: a sales-call guide that sizes LDS electrodynamic shaker systems (sine / random / shock math against a library of about 70 systems held in a server database) and suggests add-ons (controllers, accelerometers, FLVT force sensors, DAQ, chambers, service). Files: Shaker Selector.dc.html (public page, bundled to index.html), Workbench.dc.html (staff: edits database tables systems, headExpanders, kb, links), Inspector.dc.html (rule scanner), server/Code.gs (Apps Script). Rules any fix must keep: (1) no data in code \u2014 ratings, knowledge, links live in the database, so a data fix is a Workbench edit naming table, row id and field; (2) the public page never shows internal words (token, mutate, Workbench, admin, checkpoint, projection); (3) one store per fact; (7) notes never drive logic; (8) rows have stable ids. Sizing: headroom (default 80%) applies to force only; stroke, velocity, frequency and static load are pass/fail; a missing datasheet rating is screened against a related rating and marked CHECK, never PASS; never describe the customer\u2019s shock pulse as the datasheet 2 ms assumption. Decide whether the report needs a DATA fix, a CODE change, both, none, or more information. Reply with ONE JSON object only, no prose: {"type":"data|code|both|none|unclear","summary":"one sentence","where":"table.rowId.field or file \u203a area","steps":["short step"],"effort":"small|medium|large","question":"what to ask the tester, or empty"}';
+  fbNorm(r) { return { ...r, kind: this.FBX.kinds[r.kind] ? r.kind : (this.FBX.legacyKind[r.kind] || 'suggestion'), status: this.FBX.legacyStatus[r.status] || r.status || 'new', target: r.target || { step: r.step || '' }, page: r.page || { build: r.appVersion || '', ua: r.ua || '' } }; }
+  fbList(db) { return (db.feedback || []).map(r => this.fbNorm(r)).sort((a, b) => String(b.at || '').localeCompare(String(a.at || ''))); }
+  fbFiltered(db) {
+    const S = this.state, chip = S.fbChip || 'open';
+    return this.fbList(db).filter(r => (chip === 'all' || (chip === 'open' ? this.FBX.open.includes(r.status) : r.status === chip)) && (!S.fbAreaF || r.area === S.fbAreaF) && (!S.fbKindF || r.kind === S.fbKindF));
+  }
+  fbVals(db, S) {
+    const all = this.fbList(db), shown = this.fbFiltered(db), n = s => all.filter(r => r.status === s).length, chip = S.fbChip || 'open';
+    const nOpen = all.filter(r => this.FBX.open.includes(r.status)).length, shots = this._shots || {}, stLab = Object.fromEntries(this.FBX.status);
+    const chips = [['open', 'open', nOpen], ['new', 'new', n('new')], ['planned', 'planned', n('planned')], ['done', 'done', n('done')], ['all', 'all', all.length]].map(([val, label, c]) => ({ val, label, n: String(c), bg: chip === val ? '#8ab4f8' : 'transparent', fg: chip === val ? '#0f1216' : '#c5cad1', bd: chip === val ? '#8ab4f8' : '#2c3440' }));
+    const site = (S.pubStatus || {}).site || 'https://w5eng.github.io/lds-shaker-selector/';
+    const rows = shown.map(r => {
+      const k = this.FBX.kinds[r.kind], t = r.target || {}, p = r.page || {}, ai = r.aiReview, dv = key => { const d = (S.fbDraft || {})[r.id + '.' + key]; return d !== undefined ? d : (r[key] || ''); };
+      const sh = (r.shots || []).map((s, i) => { const v = shots[s.id]; return { id: s.id, src: v && v !== 'loading' && v !== 'error' ? v : '', loaded: !!v && v !== 'loading' && v !== 'error', notLoaded: !v || v === 'loading' || v === 'error', label: v === 'error' ? 'Open in Drive' : v === 'loading' ? 'Loading…' : 'Screenshot ' + (i + 1) }; });
+      const lost = Math.max(0, (r.shotsSent || 0) - (r.shots || []).length);
+      return { id: r.id, kLabel: k[0] + (r.severity ? ' · ' + this.FBX.sev[r.severity] : ''), kBg: k[1], kFg: k[2], area: this.FBX.areas[r.area] || r.area || '—', when: String(r.at || '').slice(0, 16).replace('T', ' '), from: r.from || 'name not given',
+        sLabel: stLab[r.status] || r.status, sBg: r.status === 'new' ? '#1f3a2a' : '#262c35', sFg: r.status === 'new' ? '#8ee0a8' : '#c5cad1', bd: r.status === 'new' ? '#2f5a40' : '#262c35',
+        where: [t.step && 'step ' + t.step, t.section, t.label && '“' + t.label.slice(0, 90) + '”'].filter(Boolean).join(' › '), hasWhere: !!(t.step || t.section || t.label),
+        text: r.text || '', shots: sh, hasShots: sh.length > 0, shotWarn: lost ? `${lost} screenshot(s) failed to save on the server.` : '',
+        meta: [p.viewport, p.build && 'build ' + p.build, p.url, p.ua && p.ua.slice(0, 90)].filter(Boolean).join(' · '), summary: r.summary || '', hasSummary: !!r.summary,
+        status: r.status, isDup: r.status === 'duplicate', isDone: r.status === 'done', duplicateOf: r.duplicateOf || '', fixedIn: r.fixedIn || '',
+        dupOpts: [{ val: '', label: '— pick the original —' }].concat(all.filter(x => x.id !== r.id).slice(0, 80).map(x => ({ val: x.id, label: x.id + ' · ' + (x.text || '').slice(0, 40) }))),
+        reply: dv('reply'), notes: dv('notes'),
+        aiBtn: (S.fbBusyAi || {})[r.id] ? 'Thinking…' : ai ? '✦ Review again' : '✦ Suggest a fix', hasAi: !!ai,
+        ai: ai ? { typeLabel: { data: 'DATA FIX', code: 'CODE CHANGE', both: 'DATA + CODE', none: 'NO CHANGE', unclear: 'NEEDS INFO' }[ai.type] || 'SUGGESTION', summary: ai.summary || '', where: ai.where || '', question: ai.question || '', steps: (ai.steps || []).map((x, i) => ({ n: String(i + 1), t: x })), meta: [ai.effort && 'effort ' + ai.effort, String(ai.at || '').slice(0, 16).replace('T', ' '), ai.model, ai.sawShots ? `saw ${ai.sawShots} screenshot(s)` : 'text only'].filter(Boolean).join(' · ') } : { typeLabel: '', summary: '', where: '', question: '', steps: [], meta: '' } };
+    });
+    return {
+      fbIntro: `${all.length} reports · ${n('new')} new · ${nOpen} open. Testers send these from ${site}beta.html`, fbChips: chips, fbRows: rows, fbEmpty: rows.length === 0, fbBetaUrl: site + 'beta.html',
+      fbAreaF: S.fbAreaF || '', fbKindF: S.fbKindF || '',
+      fbAreaOpts: [{ val: '', label: 'Every part' }].concat(Object.entries(this.FBX.areas).map(([val, label]) => ({ val, label }))),
+      fbKindOpts: [{ val: '', label: 'Every kind' }].concat(Object.entries(this.FBX.kinds).map(([val, k]) => ({ val, label: k[0].toLowerCase() }))),
+      fbStatOpts: this.FBX.status.map(([val, label]) => ({ val, label })),
+      fbRelOpts: [{ val: '', label: '— not set —' }].concat(((S.pubStatus || {}).releases || []).filter(x => !x.kind && (!x.target || x.target === ((S.pubStatus || {}).path || 'index.html'))).slice(0, 40).map(x => ({ val: x.id, label: x.id + (x.note ? ' · ' + x.note.slice(0, 40) : '') }))),
+      fbOnChip: e => this.setState({ fbChip: e.currentTarget.dataset.c }),
+      fbOnAreaF: e => this.setState({ fbAreaF: e.target.value }), fbOnKindF: e => this.setState({ fbKindF: e.target.value }),
+      fbReload: () => { window.DB.refresh().then(() => this.say('Reports refreshed.')).catch(err => this.say(err.message, true)); if (!S.pubStatus) this.loadPublish(); },
+      fbOnSel: e => { const { id, k } = e.target.dataset, v = e.target.value; const patch = { [k]: v }; if (k === 'status') patch.statusAt = new Date().toISOString(); this.fbSave(id, patch, `feedback ${id} ${k} → ${v || '—'}`); },
+      fbOnDraft: e => { const { id, k } = e.target.dataset, v = e.target.value; this.setState(s => ({ fbDraft: { ...(s.fbDraft || {}), [id + '.' + k]: v } })); },
+      fbOnBlur: e => { const { id, k } = e.target.dataset, v = e.target.value, rec = (db.feedback || []).find(x => x.id === id); this.setState(s => { const d = { ...(s.fbDraft || {}) }; delete d[id + '.' + k]; return { fbDraft: d }; }); if (rec && (rec[k] || '') !== v) this.fbSave(id, { [k]: v }, `feedback ${id} ${k}`); },
+      fbOnReview: e => this.fbReview(e.currentTarget.dataset.id),
+      fbOnClearAi: e => this.fbSave(e.currentTarget.dataset.id, { aiReview: null }, 'clear suggestion'),
+      fbOnTask: e => this.fbTask(e.currentTarget.dataset.id),
+      fbOpenShot: e => this.fbOpenShot(e.currentTarget.dataset.id),
+      fbReviewNew: async () => { const todo = all.filter(r => r.status === 'new' && !r.aiReview).slice(0, 5); if (!todo.length) { this.say('No new reports without a suggestion.'); return; } for (const r of todo) await this.fbReview(r.id); }
+    };
+  }
+  fbSave(id, patch, desc) {
+    const before = window.DB.pending().length;
+    window.DB.mutate({ table: 'feedback', id, patch }, desc);
+    if (before) { this.say('Staged — press Push changes to save (other edits are waiting).'); return Promise.resolve(); }
+    return window.DB.push().then(() => this.say('Saved ' + id + '.')).catch(err => this.say(err.message, true));
+  }
+  loadShots() {
+    if (!window.DB.signedIn()) return;
+    this._shots = this._shots || {};
+    const want = []; this.fbFiltered(this.db()).forEach(r => (r.shots || []).forEach(s => { if (!this._shots[s.id]) want.push(s.id); }));
+    want.slice(0, 6).forEach(id => {
+      this._shots[id] = 'loading';
+      window.DB.feedbackShot(id).then(j => { this._shots[id] = j.data; this.forceUpdate(); }).catch(() => { this._shots[id] = 'error'; this.forceUpdate(); });
+    });
+  }
+  fbOpenShot(id) {
+    const v = (this._shots || {})[id];
+    if (v && v.indexOf('data:') === 0) { fetch(v).then(r => r.blob()).then(b => window.open(URL.createObjectURL(b), '_blank')); return; }
+    window.open('https://drive.google.com/file/d/' + id + '/view', '_blank');
+  }
+  parseAi(txt) {
+    const m = String(txt || '').match(/\{[\s\S]*\}/); if (!m) return null; let j; try { j = JSON.parse(m[0]); } catch (e) { return null; }
+    const cut = (x, n) => String(x || '').slice(0, n);
+    return { type: ['data', 'code', 'both', 'none', 'unclear'].includes(j.type) ? j.type : 'unclear', summary: cut(j.summary, 400), where: cut(j.where, 300), steps: (Array.isArray(j.steps) ? j.steps : []).slice(0, 8).map(s => cut(s, 300)), effort: cut(j.effort, 20), question: cut(j.question, 300) };
+  }
+  async fbReview(id) {
+    const r = this.fbList(this.db()).find(x => x.id === id); if (!r) return;
+    this.setState(s => ({ fbBusyAi: { ...(s.fbBusyAi || {}), [id]: true } }));
+    try {
+      let ai = null;
+      const sv = await window.DB.feedbackReview(id, this.FB_BRIEF).catch(e => ({ ok: false, error: e.message }));
+      if (sv.ok) { ai = this.parseAi(sv.text); if (ai) { ai.model = sv.model; ai.sawShots = sv.sawShots; } }
+      else if (sv.error === 'no-key' && window.claude && window.claude.complete) {
+        const prompt = this.FB_BRIEF + '\n\nREPORT\n' + JSON.stringify({ id: r.id, kind: r.kind, severity: r.severity, area: r.area, text: r.text, target: r.target, page: r.page, screenshots: (r.shots || []).length + ' (not visible to you)' }) + '\n\nCALL DETAILS AT THE TIME\n' + (r.summary || '(not attached)');
+        ai = this.parseAi(await window.claude.complete({ messages: [{ role: 'user', content: prompt }], max_tokens: 1500 })); if (ai) { ai.model = 'in-chat Claude'; ai.sawShots = 0; }
+      } else throw new Error(sv.error === 'no-key' ? 'Suggestions need ANTHROPIC_API_KEY in Script Properties (or open the Workbench in the design chat).' : sv.error);
+      if (!ai) throw new Error('Claude’s answer was unusable — try again.');
+      ai.at = new Date().toISOString();
+      await this.fbSave(id, { aiReview: ai }, 'suggestion for ' + id);
+    } catch (e) { this.say(/rate|429/i.test(e.message) ? 'Claude is busy — wait a minute.' : e.message, true); }
+    this.setState(s => ({ fbBusyAi: { ...(s.fbBusyAi || {}), [id]: false } }));
+  }
+  fbTask(id) {
+    const r = this.fbList(this.db()).find(x => x.id === id); if (!r) return;
+    const t = r.target || {}, p = r.page || {}, ai = r.aiReview, k = this.FBX.kinds[r.kind][0];
+    const L = [`Beta feedback ${r.id} — ${k}${r.severity ? ' (' + this.FBX.sev[r.severity] + ')' : ''} · ${this.FBX.areas[r.area] || r.area}`,
+      `From: ${r.from || 'name not given'} · ${String(r.at || '').slice(0, 16).replace('T', ' ')} · ${p.viewport || ''} · build ${p.build || '?'}`,
+      `Pointed at: ${[t.step && 'step ' + t.step, t.section, t.label && '"' + t.label + '"'].filter(Boolean).join(' › ') || '—'}`, '', 'Report:', r.text || ''];
+    if ((r.shots || []).length) L.push('', 'Screenshots: ' + r.shots.map(s => 'https://drive.google.com/file/d/' + s.id + '/view').join(' '));
+    if (r.summary) L.push('', 'Call details at the time:', r.summary.slice(0, 2500));
+    if (ai) L.push('', `Suggested fix (${ai.type}): ${ai.summary}`, ai.where ? 'Where: ' + ai.where : '', ...(ai.steps || []).map((s, i) => `${i + 1}. ${s}`));
+    L.push('', 'Please fix this in the LDS Shaker Selector project, rebuild exports/app.html + exports/app.notes.json, and tell me which release to mark it fixed in.');
+    this.copy(L.filter(x => x !== undefined).join('\n')); this.say('Copied ' + id + ' as a task — paste it into the design chat.');
+  }
   db() { return window.DB.data() || {}; }
   say(m, err) { this.setState({ msg: m, msgErr: !!err }); }
   copy(t) {
@@ -220,7 +573,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const S = this.state, db = this.db(), cfg = window.DB_CONFIG || {}, T = this.TABLES[S.tab];
-    const tabs = [['connect', 'Connect'], ['library', 'Library'], ['heads', 'Head expanders'], ['kb', 'Knowledge'], ['links', 'W5 links'], ['feedback', 'Feedback'], ['publish', 'Publish'], ['log', 'Log']].map(([id, label]) => {
+    const tabs = [['connect', 'Connect'], ['library', 'Library'], ['heads', 'Head expanders'], ['hbk', 'HBK data'], ['kb', 'Knowledge'], ['links', 'W5 links'], ['feedback', 'Feedback'], ['publish', 'Publish'], ['platform', 'Platform links'], ['log', 'Log']].map(([id, label]) => {
       const n = id === 'feedback' ? (db.feedback || []).filter(f => f.status === 'new').length : 0;
       return { id, label, bg: S.tab === id ? '#8ab4f8' : 'transparent', fg: S.tab === id ? '#0f1216' : '#e6e8eb', hasCount: n > 0, count: String(n) };
     });
@@ -244,14 +597,20 @@ class Component extends DCLogic {
     const pend = window.DB.pending().length;
     const hist = S.log;
     return {
-      tabs, q: S.q, status, me: (window.DB.me() && window.DB.me().email) || S.who || '', btnRef: this.btnRef, authMsg: S.authMsg || '', origin: location.origin, cfg: { read: cfg.read || '(empty)', admin: cfg.admin || '(empty)' }, version: db.version ?? '—',
-      isConnect: S.tab === 'connect', isList: !!T, isPublish: S.tab === 'publish', isLog: S.tab === 'log',
+      tabs, q: S.q, status, me: (window.DB.me() && window.DB.me().email) || S.who || '', btnRef: this.btnRef, authMsg: S.authMsg || '', showTicket: !window.DB.signedIn(), ticketPaste: !!S.ticketPaste && !window.DB.signedIn(), ticketText: S.ticketText || '',
+      ticketLogin: () => this.ticketLogin(), onTicketText: e => this.setState({ ticketText: e.target.value }), useTicket: () => this.applyTicket(S.ticketText), origin: location.origin, cfg: { read: cfg.read || '(empty)', admin: cfg.admin || '(empty)' }, version: db.version ?? '—',
+      isConnect: S.tab === 'connect', isList: !!T, isPublish: S.tab === 'publish', isLog: S.tab === 'log', isFb: S.tab === 'feedback', ...this.fbVals(db, S), isPlatform: S.tab === 'platform', isHbk: S.tab === 'hbk', ...this.hbkVals(db, S), platGroups: this.platView(cfg), platNote: this.platNote(),
+      copyLink: e => { const u = e.currentTarget.dataset.u; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => this.say('Copied: ' + u)).catch(() => window.prompt('Copy this link:', u)); },
       rows, chips, fields, sel, hasSel: !!sel, listCount, copyMsg: S.copyMsg, pingMsg: S.pingMsg, seedMsg: S.seedMsg, seedForce: S.seedForce,
       pendingLabel: pend ? `${pend} unpushed change(s)` : 'all pushed', pushBg: pend ? '#8ab4f8' : '#4a5563', msg: S.msg, msgCol: S.msgErr ? '#f28b82' : '#8ee0a8',
-      relNote: S.relNote, pubMsg: S.pubMsg, pub: this.pubView(),
+      relNote: S.relNote, pubMsg: S.pubMsg, pub: this.pubView(), ...this.pfVals(),
+      pfTick: e => { const n = e.target.dataset.n, on = e.target.checked; this.setState(s => ({ pfSel: { ...(s.pfSel || {}), [n]: on } })); },
+      pfAll: () => { const names = this.pfNames(), all = names.every(n => (S.pfSel || {})[n]); this.setState({ pfSel: Object.fromEntries(names.map(n => [n, !all])) }); },
+      pfNoteEdit: e => { const n = e.target.dataset.n, v = e.target.value; this.setState(s => ({ pfEdit: { ...(s.pfEdit || {}), [n]: v } })); },
+      pfGo: () => this.pfGo(),
       releases: this.relView(db), noReleases: !this.relView(db).length,
       log: hist.map(l => ({ v: l.v, desc: l.desc, who: (l.who || '').split('@')[0], at: (l.at || '').slice(0, 16).replace('T', ' ') })), checkpoints: S.checkpoints.map(c => ({ id: c.id, label: c.label || '(no label)', v: c.v, at: (c.at || '').slice(0, 16).replace('T', ' ') })), cpLabel: S.cpLabel, logMsg: S.logMsg,
-      onTab: e => { const t = e.currentTarget.dataset.t; this.setState({ tab: t, sel: null, chip: '' }); if (t === 'log') this.loadHistory(); if (t === 'publish') this.loadPublish(); },
+      onTab: e => { const t = e.currentTarget.dataset.t; this.setState({ tab: t, sel: null, chip: '' }); if (t === 'log') this.loadHistory(); if (t === 'publish' || t === 'platform' || t === 'feedback' || t === 'hbk') this.loadPublish(); },
       onQ: e => this.setState({ q: e.target.value }),
       onChip: e => this.setState(s => ({ chip: s.chip === e.currentTarget.dataset.c ? '' : e.currentTarget.dataset.c })),
       onSelect: e => this.setState({ sel: e.currentTarget.dataset.id }),
@@ -292,6 +651,71 @@ class Component extends DCLogic {
     let note = ''; try { note = notes ? (JSON.parse(notes).note || '') : ''; } catch (e) {}
     this.setState(s => ({ build: html || s.build, buildSrc: html ? 'exports/app.html' : s.buildSrc, relNote: s.relNote || note }));
     try { const st = await window.DB.publishStatus(); this.setState({ pubStatus: st }); } catch (e) { this.setState({ pubStatus: { error: e.message } }); }
+    this.pfLoadBuilds();
+  }
+  pfKind(n, main) { return n === main ? 'built page' : /\.(png|jpe?g|gif|webp|ico)$/i.test(n) ? 'image' : /\.dc\.html$/i.test(n) ? 'source page' : /\.html$/i.test(n) ? 'redirect' : /\.js$/i.test(n) ? 'page script' : n === '.nojekyll' ? 'Pages marker' : 'file'; }
+  pfPaths(n, main) { // §7.3 rule, not a typed list: main → exports/, everything else → deploy/ (deploy/ always carries the latest)
+    if (n === main) return { build: 'exports/app.html', notes: 'exports/app.notes.json' };
+    const stem = n.replace(/\.dc\.html$/i, '').replace(/(.)\.[^.\/]+$/, '$1');
+    return { build: 'deploy/' + n, notes: 'deploy/' + stem + '.notes.json' };
+  }
+  stripPreview(t) { return String(t).replace(new RegExp('<(style|script)\\b[^>]*' + 'data-omelette' + '-injected' + '[^>]*>[\\s\\S]*?<\\/\\1>', 'gi'), ''); }
+  pfNames() { const st = this.state.pubStatus || {}; return st.path ? [st.path].concat(st.files || []) : []; }
+  async pfLoadBuilds() {
+    const st = this.state.pubStatus || {}, main = st.path, url = p => new URL(p.split('/').map(encodeURIComponent).join('/'), document.baseURI);
+    const out = {};
+    await Promise.all(this.pfNames().map(async n => {
+      const P = this.pfPaths(n, main), b = { size: null, note: '', builtAt: '' };
+      try { const r = await fetch(url(P.build), { cache: 'no-store' }); if (r.ok) { const buf = await r.arrayBuffer(); b.size = buf.byteLength; } } catch (e) {}
+      try { const r = await fetch(url(P.notes), { cache: 'no-store' }); if (r.ok) { const j = JSON.parse(await r.text()); b.note = j.note || ''; b.builtAt = j.builtAt || ''; } } catch (e) {}
+      out[n] = b;
+    }));
+    this.setState({ pfBuilds: out });
+  }
+  pfVals() {
+    const S = this.state, st = S.pubStatus || {}, B = S.pfBuilds || {}, sel = S.pfSel || {}, ed = S.pfEdit || {}, res = S.pfRes || {}, main = st.path;
+    const kb = n => n == null ? '' : n < 1024 ? n + ' B' : (n / 1024).toFixed(n < 10240 ? 1 : 0) + ' KB';
+    const rows = this.pfNames().map(n => {
+      const b = B[n] || {}, r = res[n] || {}, edited = ed[n] != null;
+      return { name: n, desc: this.pfKind(n, main), on: !!sel[n], size: B[n] ? (b.size == null ? 'not in ' + this.pfPaths(n, main).build.split('/')[0] + '/' : kb(b.size)) : '…', sizeCol: B[n] && b.size == null ? '#f28b82' : '#c5cad1',
+        note: edited ? ed[n] : (b.note || ''), noteSrc: edited ? 'edited here (this send only)' : b.note ? 'from the build' + (b.builtAt ? ' (' + String(b.builtAt).slice(0, 16).replace('T', ' ') + ')' : '') : 'no note file beside the build',
+        res: r.text || '', resCol: r.ok ? '#8ee0a8' : r.busy ? '#c5cad1' : '#f28b82', url: r.url || '' };
+    });
+    const n = rows.filter(x => x.on).length, busy = !!S.pfBusy;
+    return { pfRows: rows, pfGoLabel: busy ? 'Publishing…' : n ? 'Publish ' + n + ' file' + (n > 1 ? 's' : '') : 'Tick files to publish', pfGoBg: n && !busy ? '#8ab4f8' : '#4a5563',
+      pfAllLabel: rows.length && rows.every(x => x.on) ? 'Untick all' : 'Tick all',
+      pfNote: st.error ? 'Server: ' + st.error : st.ok === false ? (st.message || st.error) : !st.path ? 'Loading the file list from the server…' : !/claudeusercontent\.com$/.test(location.hostname) && rows.some(x => x.size.startsWith('not in')) ? 'Publishing reads the builds from the design project — open this Workbench in the design chat to publish. Here you can still compare and see releases.' : '' };
+  }
+  async pfGo() {
+    const S = this.state, st = S.pubStatus || {}, main = st.path, sel = S.pfSel || {}, names = this.pfNames().filter(n => sel[n]);
+    if (!names.length || S.pfBusy) return;
+    const V = this.pfVals().pfRows, noteOf = n => (V.find(x => x.name === n) || {}).note || '';
+    if (!window.confirm('Publish ' + names.length + ' file(s)?\n\n' + names.map(n => '• ' + n + ' — ' + (noteOf(n).slice(0, 70) || '(no note)')).join('\n') + '\n\nEach file is its own commit; GitHub keeps every earlier version.')) return;
+    this.setState({ pfBusy: true });
+    const setRes = (n, r) => this.setState(s => ({ pfRes: { ...(s.pfRes || {}), [n]: r } }));
+    const url = p => new URL(p.split('/').map(encodeURIComponent).join('/'), document.baseURI);
+    const b64 = buf => { let s = '', a = new Uint8Array(buf); for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); };
+    for (const n of names) {
+      const note = noteOf(n), kind = this.pfKind(n, main), P = this.pfPaths(n, main);
+      setRes(n, { busy: true, text: 'reading…' });
+      let resp; try { resp = await fetch(url(P.build), { cache: 'no-store' }); } catch (e) { resp = null; }
+      if (!resp || !resp.ok) { setRes(n, { text: 'not in ' + P.build.split('/')[0] + '/' }); continue; }
+      let body;
+      if (kind === 'image') body = { b64: b64(await resp.arrayBuffer()) };
+      else { body = { text: this.stripPreview(await resp.text()) }; if (kind === 'page script') { try { new Function(body.text); } catch (e) { setRes(n, { text: 'script does not parse — ' + e.message }); continue; } } }
+      const send = confirmSmall => n === main ? window.DB.publishViewer(body.text, note, confirmSmall) : body.b64 != null ? window.DB.publishFileB64(n, body.b64, note, confirmSmall) : window.DB.publishFile(n, body.text, note, confirmSmall);
+      let r = null, err = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        setRes(n, { busy: true, text: attempt > 1 ? 'retrying (' + attempt + '/3)…' : 'sending…' });
+        try { r = await send(false); err = null; break; } catch (e) { err = e; if (!e.nonJson) break; await new Promise(res => setTimeout(res, 3000)); }
+      }
+      if (err) { setRes(n, { text: err.nonJson ? 'The server didn’t answer three times — wait a minute and publish again.' : err.message }); continue; }
+      if (r && r.error === 'too-small' && window.confirm(r.message + '\n\nSend ' + n + ' anyway?')) { try { r = await send(true); } catch (e) { setRes(n, { text: e.message }); continue; } }
+      if (r && r.ok) setRes(n, { ok: true, text: 'sent · ' + (r.size < 1024 ? r.size + ' B' : (r.size / 1024).toFixed(0) + ' KB') + ' · ' + r.id, url: r.url });
+      else setRes(n, { text: (r && (r.message || r.error)) || 'refused' });
+    }
+    this.setState({ pfBusy: false });
+    try { const s2 = await window.DB.publishStatus(); this.setState({ pubStatus: s2 }); } catch (e) {}
   }
   pubView() {
     const st = this.state.pubStatus || {}, b = this.state.build;
@@ -299,8 +723,100 @@ class Component extends DCLogic {
       tok: st.error ? 'Server: ' + st.error : st.ready ? 'GitHub token set on the server' : st.repo ? 'GH_TOKEN missing in Script Properties' : 'Checking…', tokCol: st.ready ? '#8ee0a8' : '#f2c46d',
       build: b ? `${this.state.buildSrc} · ${(b.length / 1024).toFixed(0)} KB` : 'not found', buildCol: b ? '#8ee0a8' : '#f2c46d', needPick: !b };
   }
+  hbkLib() {
+    if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+    if (!this._xl) this._xl = new Promise((ok, no) => { const s = document.createElement('script'); s.src = window.HBKSheet.EXCELJS; s.onload = () => ok(window.ExcelJS); s.onerror = () => { this._xl = null; no(new Error('Could not load the Excel library — check the connection.')); }; document.head.appendChild(s); });
+    return this._xl;
+  }
+  async hbkDownload() {
+    const db = this.db(); if (!db || !db.systems) { this.setState({ hbkMsg: 'Database not loaded yet.', hbkErr: true }); return; }
+    this.setState({ hbkMsg: 'Building the file…', hbkErr: false });
+    try {
+      const X = await this.hbkLib(); const b = await window.HBKSheet.build(X, db);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([b.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })); a.download = b.filename; document.body.appendChild(a); a.click(); a.remove();
+      this.setState({ hbkMsg: `Downloaded "${b.filename}" — ${b.rows} rows, ${b.missing} missing values for HBK to fill.`, hbkErr: false });
+    } catch (e) { this.setState({ hbkMsg: e.message, hbkErr: true }); }
+  }
+  async hbkFile(e) {
+    const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+    this.setState({ hbkMsg: 'Reading ' + f.name + '…', hbkErr: false, hbkRes: null });
+    try {
+      const X = await this.hbkLib(); const res = await window.HBKSheet.parse(X, await f.arrayBuffer(), this.db());
+      const pick = {}; res.changes.forEach((c, i) => { pick['c' + i] = !c.clears; }); res.adds.forEach((_, i) => { pick['a' + i] = true; }); res.retire.forEach((_, i) => { pick['r' + i] = true; }); res.notes.forEach((_, i) => { pick['n' + i] = true; });
+      const n = res.changes.length + res.adds.length + res.retire.length + res.notes.length;
+      this.setState({ hbkRes: res, hbkPick: pick, hbkFileName: f.name, hbkMsg: !res.sheets ? 'This does not look like the W5 data-check file.' : n ? '' : 'No differences — HBK confirmed everything as is.', hbkErr: !res.sheets });
+    } catch (err) { this.setState({ hbkMsg: 'Could not read the file: ' + err.message, hbkErr: true }); }
+  }
+  hbkApply() {
+    const S = this.state, res = S.hbkRes; if (!res) return;
+    if (!window.DB.signedIn()) { this.setState({ hbkMsg: 'Sign in first (Staff sign-in), then apply.', hbkErr: true }); return; }
+    const who = (window.DB.me() && window.DB.me().email) || '';
+    const list = window.HBKSheet.ops(res, S.hbkPick || {}, who.split('@')[0]);
+    if (!list.length) { this.setState({ hbkMsg: 'Nothing selected.', hbkErr: true }); return; }
+    const db = this.db();
+    const opsOut = list.map(o => { const patch = { ...o.patch }; if (o.memo) { const rec = (db[o.table] || []).find(r => r.id === o.id); patch.notes = ((rec && rec.notes) || (o.patch.notes || '')) ? ((rec && rec.notes) || o.patch.notes) + '\n' + o.memo : o.memo; } return { table: o.table, id: o.id, patch }; });
+    if (!window.confirm(`Apply ${opsOut.length} row update(s) from ${S.hbkFileName}? A new database version is written; earlier versions stay restorable from Log.`)) return;
+    window.DB.mutate(opsOut, 'HBK data check: ' + S.hbkFileName);
+    window.DB.push().then(() => this.setState({ hbkRes: null, hbkMsg: `Saved ${opsOut.length} row update(s) from HBK. Every page picks them up on next load.`, hbkErr: false })).catch(err => this.setState({ hbkMsg: err.message + ' — changes are staged; press Push changes to retry.', hbkErr: true }));
+  }
+  hqVals(db) {
+    const st = this.state.pubStatus || {}, site = st.site || 'https://w5eng.github.io/lds-shaker-selector/';
+    const titles = {}; ((window.HBKQ && window.HBKQ.list(db)) || []).forEach(s => s.qs.forEach(q => { titles[q.id] = q.title; }));
+    const list = (db.hbkAnswers || []).slice().sort((a, b) => String(b.at).localeCompare(String(a.at))).map(h => ({
+      id: h.id, status: h.status || 'submitted', who: `${h.by.name}${h.by.role ? ', ' + h.by.role : ''} · ${h.by.company} · ${h.by.email}`,
+      dates: `submitted ${String(h.at).slice(0, 16).replace('T', ' ')} · updated ${String(h.updatedAt).slice(0, 16).replace('T', ' ')} UTC`,
+      answers: Object.keys(h.answers || {}).sort().map(q => ({ q, title: titles[q] || '', text: window.HBKQ ? window.HBKQ.describe(h.answers[q]) : JSON.stringify(h.answers[q]) })),
+      revs: (h.revisions || []).map(v => ({ n: String(v.n), who: v.by.name, at: String(v.at).slice(0, 16).replace('T', ' '), reason: v.reason, qs: (v.changes || []).map(c => c.q).join(', ') }))
+    }));
+    return { hqLink: site + 'hbk.html', hqList: list, hqNone: !list.length, hqCount: list.length + ' response' + (list.length === 1 ? '' : 's'),
+      hqStatus: e => { const id = e.target.dataset.id, v = e.target.value; window.DB.mutate({ table: 'hbkAnswers', id, patch: { status: v } }, 'HBK questionnaire ' + id + ' → ' + v); window.DB.push().then(() => this.say(id + ' marked ' + v + '.')).catch(err => this.say(err.message, true)); } };
+  }
+  hbkVals(db, S) {
+    const fmt = v => v == null || v === '' ? '—' : String(v);
+    const sysN = (db.systems || []).filter(r => r.active !== false).length, heN = (db.headExpanders || []).filter(r => r.active !== false && r.wt > 0).length;
+    const res = S.hbkRes, pick = S.hbkPick || {};
+    const groups = [];
+    if (res) {
+      const g = (title, arr, pre, view) => { if (arr.length) groups.push({ title: title + ' · ' + arr.length, items: arr.map((x, i) => ({ k: pre + i, on: !!pick[pre + i], name: x.name, where: x.tab, what: view(x) })) }); };
+      g('Changed values', res.changes, 'c', c => `${c.label}: ${fmt(c.from)} → ${fmt(c.to)}${c.clears ? '  (HBK cleared it — off by default)' : ''}`);
+      g('New models', res.adds, 'a', a => Object.keys(a.row).filter(k => k !== 'active').map(k => k + ' ' + a.row[k]).join(' · '));
+      g('Mark discontinued (hidden from sizing)', res.retire, 'r', () => 'active → no');
+      g('Comments (saved to the row’s notes memo)', res.notes, 'n', n => [n.status, n.comment].filter(Boolean).join(' — '));
+    }
+    const sel = Object.keys(pick).filter(k => pick[k]).length;
+    return {
+      hbkStats: `${heN} head expanders · ${sysN} systems · database v${db.version || '—'}`,
+      hbkMsg: S.hbkMsg || '', hbkMsgCol: S.hbkErr ? '#f28b82' : '#81c995',
+      hbkHas: !!res && groups.length > 0, hbkGroups: groups, hbkWarn: res ? res.warnings.map(t => ({ t })) : [], hbkHasWarn: !!res && res.warnings.length > 0,
+      hbkSummary: res ? `${S.hbkFileName} · ${res.changes.length} changed values · ${res.adds.length} new · ${res.retire.length} discontinued · ${res.notes.length} comments` : '',
+      hbkApplyLabel: `Save ${sel} selected`,
+      ...this.hqVals(db),
+      hbkDownload: () => this.hbkDownload(), hbkFile: e => this.hbkFile(e),
+      hbkToggle: e => { const k = e.target.dataset.k; const v = e.target.checked; this.setState(s => ({ hbkPick: { ...s.hbkPick, [k]: v } })); },
+      hbkAll: e => { const v = e.currentTarget.dataset.v === '1'; this.setState(s => { const p = {}; Object.keys(s.hbkPick || {}).forEach(k => { p[k] = v; }); return { hbkPick: p }; }); },
+      hbkApply: () => this.hbkApply()
+    };
+  }
+  platView(cfg) {
+    const st = this.state.pubStatus || {}, site = st.site || '', repo = st.repo || '', br = st.branch || 'main';
+    const L = (label, url, note) => ({ label, url: url || '', note: note || '', has: !!url, missing: !url });
+    const gh = repo ? 'https://github.com/' + repo : '';
+    return [
+      { title: 'The app', items: [L('Public app (customers & sales)', site), L('Beta page', site && site + 'beta.html'), L('HBK questionnaire (send to HBK)', site && site + 'hbk.html'), L('Workbench (live)', site && site + 'Workbench.dc.html'), L('Inspector (live)', site && site + 'Inspector.dc.html')] },
+      { title: 'GitHub', items: [L('Repository', gh), L('Commit history', gh && gh + '/commits/' + br), L('Pages settings', gh && gh + '/settings/pages'), L('Deploy status', gh && gh + '/actions')] },
+      { title: 'Google', items: [L('Apps Script project', st.scriptId && 'https://script.google.com/home/projects/' + st.scriptId + '/edit'), L('Script deployments', st.scriptId && 'https://script.google.com/home/projects/' + st.scriptId + '/deployments'), L('Drive folder (database, versions, releases)', st.driveUrl), L('Google Cloud credentials (OAuth client)', cfg.googleClientId && 'https://console.cloud.google.com/apis/credentials')] },
+      { title: 'Server endpoints', items: [L('Data endpoint (public + staff)', cfg.read, 'Open it to check the server is up'), L('Staff sign-in (W5 only)', cfg.loginUrl)] }
+    ];
+  }
+  platNote() {
+    const st = this.state.pubStatus || {};
+    if (st.error) return 'Server did not answer: ' + st.error;
+    if (!st.site) return 'Loading from the server…';
+    if (!st.scriptId) return 'Apps Script and Drive links appear after the server code is updated (paste server/Code.gs → Manage deployments → New version).';
+    return '';
+  }
   relView(db) {
-    const list = ((this.state.pubStatus || {}).releases) || (db.releases || []).slice().reverse();
+    const list = ((this.state.pubStatus || {}).releases) || [];
     return list.filter(r => r.id).map((r, i) => ({ id: r.id, note: r.note || '', at: (r.at ? new Date(r.at).toISOString() : '').slice(0, 16).replace('T', ' '), by: (r.by || r.who || '').split('@')[0], size: r.bytes ? (r.bytes / 1024).toFixed(0) + ' KB' : '', url: r.url || '', liveTag: i === 0 ? '  · live' : '' }));
   }
   async loadHistory() { try { const h = await window.DB.history(); this.setState({ log: h.history.log, checkpoints: h.history.checkpoints, logMsg: '' }); } catch (e) { this.setState({ logMsg: e.message }); } }
