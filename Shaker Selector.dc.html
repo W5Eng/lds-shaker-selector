@@ -700,7 +700,7 @@ class Component extends DCLogic {
         q: [
           { id: 'mount', label: 'Mounting interface', core: 1, type: 'text', ph: 'e.g. 4× 1/4-20 on 6 in square, drawing to follow' },
           { id: 'fixture', label: 'Fixture / adapter', core: 1, type: 'single', opts: ['Existing fixture', 'Need W5 fixture', 'Unknown'] },
-          { id: 'heType', label: 'Head expander (vertical)', type: 'single', opts: ['Not needed', 'Unguided (standard)', 'Guided', 'Not sure'], hint: 'Needed when the part or fixture is wider than the armature. Guided expanders carry heavy, tall or offset payloads on bearings.' },
+          { id: 'heType', label: 'Head expander (vertical)', core: 1, type: 'single', opts: ['Not needed', 'Unguided (standard)', 'Guided', 'Not sure'], hint: 'Needed when the part or fixture is wider than the armature. Guided expanders carry heavy, tall or offset payloads on bearings.' },
           { id: 'tb', label: 'Thermal barrier on head expander', type: 'single', opts: ['No', 'Yes'], show: f => f.he && f.he !== 'None' && f.heType !== 'Not needed' },
           { id: 'slipWt', label: 'Slip table moving weight', type: 'num', unit: 'W', hint: 'Plate + driver bar from the combo quote or drawing.', show: f => f.axes === 'Vertical + horizontal' },
           { id: 'env', label: 'Temperature / humidity', core: 1, type: 'single', opts: ['Ambient only', 'Temperature', 'Temp + humidity'] },
