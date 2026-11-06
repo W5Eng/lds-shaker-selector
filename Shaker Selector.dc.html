@@ -875,7 +875,7 @@ class Component extends DCLogic {
       if (lim == null || lim === 0) {
         if (skipNull) return;
         if (proxy > 0 && req > proxy) { checks.push({ label, req, lim: proxy, ratio: req / proxy, st: 'EXCEEDS', unit: unit + ' (est.)' }); return; }
-        checks.push({ label, req, lim: null, ratio: proxy > 0 ? req / proxy : null, st: 'NO DATA', unit }); return;
+        checks.push({ label, req, lim: null, pl: proxy > 0 ? proxy : null, ratio: proxy > 0 ? req / proxy : null, st: 'NO DATA', unit }); return;
       }
       const ratio = req / lim; checks.push({ label, req, lim, ratio, st: ratio <= 1 ? 'OK' : 'EXCEEDS', unit });
     };
@@ -1119,7 +1119,7 @@ class Component extends DCLogic {
     if (rec.none) { const best = A.evals.slice().sort((a, b) => a.peak - b.peak).reverse()[0]; const top = A.evals.reduce((m, e) => (!m || e.size > m.size ? e : m), null); rec.noneDriver = top && top.driver ? `${top.driver.label} on the largest system (${top.name}) at ${this.pct(top.driver.ratio)}` : (top && !top.freqOk ? 'frequency range' : 'see checks'); }
     if (p) {
       const st = this.stat(p.res);
-      const bars = p.checks.map(c => ({ label: c.label, txt: c.st === 'NO DATA' ? `${this.uq(c.req, c.unit)} · no datasheet rating${c.ratio != null ? ' (screened vs sine)' : ''}` : `${this.uq(c.req, c.unit).replace(/ (\S+)( .*)?$/, '')} / ${this.uq(c.lim, c.unit)} · ${this.pct(c.ratio)}`, w: c.ratio == null ? '0%' : Math.min(100, c.ratio * 100) + '%', col: c.ratio == null ? C.warn : this.utilCol(c.ratio, H) }));
+      const bars = p.checks.map(c => ({ label: c.label, txt: c.st === 'NO DATA' ? `${this.uq(c.req, c.unit)} · no rating on file` + (c.pl ? ` — vs ${this.uq(c.pl, c.unit).replace(/ (pk|rms)$/, '')} estimate (${/shock/i.test(c.label) ? '2× sine' : 'sine rating'}) · ${this.pct(c.ratio)}` : '') : `${this.uq(c.req, c.unit).replace(/ (\S+)( .*)?$/, '')} / ${this.uq(c.lim, c.unit)} · ${this.pct(c.ratio)}`, w: c.ratio == null ? '0%' : Math.min(100, c.ratio * 100) + '%', col: c.ratio == null ? C.warn : this.utilCol(c.ratio, H) }));
       rec = { ...rec, tierLabel: A.pickedLabel, shaker: p.s.shaker + (p.name.includes('(fan)') ? ' (fan)' : p.name.includes('(no fan)') ? ' (no fan)' : '') + (p.name.split(' / ')[0].replace(/\s*\(.*\)/, '') !== p.s.shaker ? '' : ''), amp: p.s.amp, stLabel: st.l, stFg: st.fg, stBg: st.bg,
         driver: p.driver ? `Sized by ${p.driver.label.toLowerCase()} — ${this.pct(p.driver.ratio)} of rating (target ≤ ${this.pct(H)})` : '',
         mass: `${this.u(p.m, 'm')}`, freq: (R.fmax ? `Test ${this.fmt(R.fmin)}–${this.fmt(R.fmax)} Hz · shaker ${this.fmt(p.s.fmin)}–${this.fmt(p.s.fmax)} Hz · ` : '') + (this.singlePhase && this.singlePhase(p.s) ? 'single-phase' : '3-phase') + ' · ' + p.leadTxt, bars, src: p.s.src + (p.s.notes ? ' · ' + p.s.notes : '') };
