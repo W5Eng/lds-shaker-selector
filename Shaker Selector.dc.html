@@ -813,7 +813,7 @@ class Component extends DCLogic {
       const dis = x => t === 'in pk-pk' ? L : t === 'g pk' ? 2 * L * G / (PI2 * x) ** 2 : 2 * L / (PI2 * x);
       const A = Math.max(acc(a), acc(b)), V = Math.max(vel(a), vel(b)), D = Math.max(dis(a), dis(b));
       if (useSine) { R.sineAcc = Math.max(R.sineAcc, A); R.sineVel = Math.max(R.sineVel, V); R.sineDisp = Math.max(R.sineDisp, D); fr(a, b); }
-      return { info: `${this.fmt(acc(a))}→${this.fmt(acc(b))} g · ${this.fmt(V)} in/s · ${this.fmt(D)} in pk-pk`, err: false };
+      return { info: `${this.fmt(acc(a))}→${this.fmt(acc(b))} g · ${this.u(V, 'V')} · ${this.u(D, 'L')} pk-pk`, err: false };
     });
 
     const scale = 10 ** ((this.num(f.dB) || 0) / 10);
@@ -844,7 +844,7 @@ class Component extends DCLogic {
       const T_ = ms / 1000, k = r.shape === 'Half-sine' ? 2 / Math.PI : r.shape === 'Square' ? 1 : 0.5, kd = r.shape === 'Half-sine' ? 1 / Math.PI : r.shape === 'Square' ? 0.5 : 1 / 6;
       const dv = k * A * G * T_, d = kd * A * G * T_ * T_;
       if (useShock) { R.shockG = Math.max(R.shockG, A); R.shockVel = Math.max(R.shockVel, dv); R.shockDisp = Math.max(R.shockDisp, d); }
-      return { info: `ΔV ${this.fmt(dv)} in/s · stroke ${this.fmt(d)} in (uncompensated)` };
+      return { info: `ΔV ${this.u(dv, 'V')} · stroke ${this.u(d, 'L')} (uncompensated)` };
     });
 
     const kg = f.unit === 'kg';
@@ -954,7 +954,7 @@ class Component extends DCLogic {
       else o.push({ id: 'chamber', title: 'Environmental test chamber', short: `${f.tMin || '?'} to ${f.tMax || '?'} °C${f.env === 'Temp + humidity' ? ' + RH' : ''}`, reason: `Combined ${f.env === 'Temp + humidity' ? 'temperature/humidity' : 'temperature'} + vibration: chamber, thermal barrier and ports. Follow up with the Environmental Chamber questionnaire.`, say: '“Would you like us to quote the chamber together, so it’s sized to sit over the shaker?”' });
     }
     if (M.horiz) o.push({ id: 'slip', title: 'Slip table', short: 'Horizontal axes', reason: 'Required for horizontal axes when the part can’t simply be rotated.' + (!this.num(f.slipWt) ? ' Its moving weight isn’t in the sizing yet.' : ''), say: '“What table size do you need for horizontal testing?”' });
-    if (p && p.s.dia && M.footIn > p.s.dia && (f.he || 'None') === 'None' && f.heType !== 'Not needed') o.push({ id: 'he', title: 'Head expander', short: `${this.fmt(M.footIn)} in > ${this.fmt(p.s.dia)} in armature`, reason: `The mounting face (${this.fmt(M.footIn)} in) is larger than the ${this.fmt(p.s.dia)} in armature. A head expander adds weight — pick one on Mounting to include it.`, say: '“We’ll likely need a larger table surface — do you have a bolt pattern?”' });
+    if (p && p.s.dia && M.footIn > p.s.dia && (f.he || 'None') === 'None' && f.heType !== 'Not needed') o.push({ id: 'he', title: 'Head expander', short: `${this.u(M.footIn, 'L')} > ${this.u(p.s.dia, 'L')} armature`, reason: `The mounting face (${this.u(M.footIn, 'L')}) is larger than the ${this.u(p.s.dia, 'L')} armature. A head expander adds weight — pick one on Mounting to include it.`, say: '“We’ll likely need a larger table surface — do you have a bolt pattern?”' });
     if (f.fixture === 'Need W5 fixture') o.push({ id: 'fixture', title: 'Custom fixture design', short: 'W5 fixture', reason: 'Designed to stay stiff through the test range and included in the sizing.', say: '“Can you share a drawing or model of the part’s mounting points?”' });
     if (!(f.service || []).includes('Equipment quote only')) o.push({ id: 'service', title: 'Service plan & spares', short: 'Good / better / best', reason: 'Preventive maintenance, calibration and recommended spares reduce downtime.', say: '“Would you like service plan options on the quote?”' });
     if (f.ctrlBrand === 'None' || (f.scope || []).includes('Training') || (f.scope || []).includes('Turnkey system')) o.push({ id: 'train', title: 'Installation & training', short: 'Commissioning', reason: 'On-site commissioning and operator training for a new lab or first shaker.', say: '“Who on your team will be running the system day to day?”' });
@@ -980,8 +980,8 @@ class Component extends DCLogic {
     if (!show) return out;
     const dia = p && p.s.dia;
     if (!p) out.msg = 'Enter test levels first — compatible sizes depend on the shaker.';
-    if (dia && M.footIn) { const big = M.footIn > dia; out.need = big ? `Needed: ${this.fmt(M.footIn)} in face > ${this.fmt(dia)} in armature` : `Optional: face fits the ${this.fmt(dia)} in armature`; out.needBg = big ? C.warnS : C.okS; out.needFg = big ? 'oklch(0.48 0.11 70)' : C.ok; }
-    else if (dia) out.need = `Armature ${this.fmt(dia)} in — enter the mounting face size`;
+    if (dia && M.footIn) { const big = M.footIn > dia; out.need = big ? `Needed: ${this.u(M.footIn, 'L')} face > ${this.u(dia, 'L')} armature` : `Optional: face fits the ${this.u(dia, 'L')} armature`; out.needBg = big ? C.warnS : C.okS; out.needFg = big ? 'oklch(0.48 0.11 70)' : C.ok; }
+    else if (dia) out.need = `Armature ${this.u(dia, 'L')} — enter the mounting face size`;
     const real = this.HEADS.filter(r => r.wt > 0);
     const anyGuideField = real.some(r => r.guide);
     let rows = p ? real.filter(r => this.heFits(r, model)) : [];
@@ -993,9 +993,9 @@ class Component extends DCLogic {
     out.cards = rows.map(r => {
       const on = f.he === r.name || f.he === r.id; const mm = (String(r.name).match(/(\d+)\s*mm/) || [])[1]; const sizeIn = mm ? mm / 25.4 : null;
       const checks = [];
-      if (sizeIn && M.footIn) checks.push(sizeIn >= M.footIn ? { t: '✓ Covers the mounting face', col: C.ok } : { t: `✕ Smaller than the ${this.fmt(M.footIn)} in face`, col: C.bad });
+      if (sizeIn && M.footIn) checks.push(sizeIn >= M.footIn ? { t: '✓ Covers the mounting face', col: C.ok } : { t: `✕ Smaller than the ${this.u(M.footIn, 'L')} face`, col: C.bad });
       if (r.mode && R.fmax) checks.push(r.mode > R.fmax ? { t: `✓ 1st mode ${this.fmt(r.mode)} Hz above test (${this.fmt(R.fmax)} Hz)`, col: C.ok } : { t: `! Test reaches ${this.fmt(R.fmax)} Hz, above its ${this.fmt(r.mode)} Hz mode — multipoint control`, col: 'oklch(0.48 0.11 70)' });
-      return { name: r.name, size: r.name.split(/\s[–-]\s/)[0], specs: `${this.fmt(r.wt)} lb${r.tb ? ` · barrier +${this.fmt(r.tb)} lb` : ''}${r.mode ? ` · 1st mode ${this.fmt(r.mode)} Hz` : ''}`, checks, sel: on ? 'Selected ✓' : 'Use this', selFg: on ? C.ok : C.acc, bd: on ? C.acc : '#e4e2dd', bg: on ? '#eef3fa' : '#ffffff' };
+      return { name: r.name, size: r.name.split(/\s[–-]\s/)[0], specs: `${this.u(r.wt, 'm')}${r.tb ? ` · barrier +${this.u(r.tb, 'm')}` : ''}${r.mode ? ` · 1st mode ${this.fmt(r.mode)} Hz` : ''}`, checks, sel: on ? 'Selected ✓' : 'Use this', selFg: on ? C.ok : C.acc, bd: on ? C.acc : '#e4e2dd', bg: on ? '#eef3fa' : '#ffffff' };
     });
     out.hasMsg = !!out.msg;
     return out;
@@ -1043,17 +1043,17 @@ class Component extends DCLogic {
     L.push(`Purpose: ${(f.purpose || []).join(', ') || '—'} | Spec: ${f.specName || f.spec || '—'}`);
     L.push('');
     L.push(`DUT: ${f.dutDesc || '—'} — ${f.dutWt || '?'} ${u}; fixture ${f.fixWt || '?'} ${u}; CG ${f.cg || '?'}`);
-    L.push(`Payload ${this.fmt(M.payload)} lb; head expander: ${M.heName}${f.heType && f.heType !== 'Not needed' ? ' (' + f.heType + ')' : ''}${f.tb === 'Yes' ? ' + thermal barrier' : ''}; axes: ${f.axes || '?'}`);
+    L.push(`Payload ${this.u(M.payload, 'm')}; head expander: ${M.heName}${f.heType && f.heType !== 'Not needed' ? ' (' + f.heType + ')' : ''}${f.tb === 'Yes' ? ' + thermal barrier' : ''}; axes: ${f.axes || '?'}`);
     L.push(`Tests: ${(f.types || []).join(', ') || '—'}`);
-    if (R.sineAcc) L.push(`  Sine: ${this.fmt(R.sineAcc)} g pk, ${this.fmt(R.sineVel)} in/s, ${this.fmt(R.sineDisp)} in pk-pk`);
-    if (R.grms) L.push(`  Random: ${this.fmt(R.grms)} Grms, ${this.fmt(R.rDisp)} in pk-pk (${this.props.sigma ?? 3}σ)`);
-    if (R.shockG) L.push(`  Shock: ${this.state.shock.filter(r => this.num(r.g) > 0 && this.num(r.ms) > 0).map(r => `${r.shape} ${r.g} g / ${r.ms} ms`).join('; ')} — ΔV ${this.fmt(R.shockVel)} in/s, stroke ${this.fmt(R.shockDisp)} in`);
+    if (R.sineAcc) L.push(`  Sine: ${this.fmt(R.sineAcc)} g pk, ${this.u(R.sineVel, 'V')}, ${this.u(R.sineDisp, 'L')} pk-pk`);
+    if (R.grms) L.push(`  Random: ${this.fmt(R.grms)} Grms, ${this.u(R.rDisp, 'L')} pk-pk (${this.props.sigma ?? 3}σ)`);
+    if (R.shockG) L.push(`  Shock: ${this.state.shock.filter(r => this.num(r.g) > 0 && this.num(r.ms) > 0).map(r => `${r.shape} ${r.g} g / ${r.ms} ms`).join('; ')} — ΔV ${this.u(R.shockVel, 'V')}, stroke ${this.u(R.shockDisp, 'L')}`);
     if (R.fmax) L.push(`  Frequency: ${this.fmt(R.fmin)}–${this.fmt(R.fmax)} Hz`);
     L.push('');
     if (p) {
       L.push(`${A.pickedLabel.toUpperCase()}: ${p.name} (${p.res}, peak ${this.pct(p.peak)} — ${p.driver ? p.driver.label : ''})`);
-      L.push(`Moving mass ${this.fmt(p.m)} lb · ${p.leadTxt}`);
-      if (R.reqForce) L.push(`Customer-stated rating: ${this.fmt(R.reqForce)} lbf${R.reqDisp ? `, ${this.fmt(R.reqDisp)} in pk-pk` : ''}`);
+      L.push(`Moving mass ${this.u(p.m, 'm')} · ${p.leadTxt}`);
+      if (R.reqForce) L.push(`Customer-stated rating: ${this.u(R.reqForce, 'F')}${R.reqDisp ? `, ${this.u(R.reqDisp, 'L')} pk-pk` : ''}`);
       A.tiers.filter(t => t.e !== p).forEach(t => L.push(`  ${t.label}: ${t.e.name} (${this.pct(t.e.peak)})`));
     } else L.push('No library system selected.');
     L.push('');
@@ -1075,13 +1075,20 @@ class Component extends DCLogic {
     return L.join('\n');
   }
 
+  // Display units: all math stays in lb / in / in/s / lbf; only what is shown follows the unit toggle.
+  UT = { m: [0.45359237, 'kg', 'lb'], L: [25.4, 'mm', 'in'], V: [0.0254, 'm/s', 'in/s'], F: [0.00444822, 'kN', 'lbf'] };
+  u(v, k) { if (v == null || !isFinite(v)) return '—'; const t = this.UT[k], si = this.state.f.unit === 'kg'; return si ? this.fmt(v * t[0]) + ' ' + t[1] : this.fmt(v) + ' ' + t[2]; }
+  uq(v, unit) { // value with a datasheet-style unit ("lbf pk", "in pk-pk", "in/s pk", "lb", "g pk", "Grms")
+    const m = String(unit).match(/^(lbf|lb|in\/s|in)(\s.*)?$/); if (!m) return this.fmt(v) + ' ' + unit;
+    return this.u(v, { lbf: 'F', lb: 'm', 'in/s': 'V', in: 'L' }[m[1]]) + (m[2] || '');
+  }
   // ---------- views ----------
   qView(q, f) {
     const C = this.C, v = f[q.id], t = q.type;
     const unit = q.unit === 'W' ? f.unit : q.unit === 'L' ? (f.unit === 'kg' ? 'mm' : 'in') : q.unit === 'F' ? (f.unit === 'kg' ? 'kN' : 'lbf') : (q.unit || '');
     let opts = [];
     if (t === 'single' || t === 'multi') opts = q.opts.map(o => { const on = t === 'multi' ? (v || []).includes(o) : v === o; return { label: o, val: o, q: q.id, bg: on ? C.acc : '#ffffff', fg: on ? '#ffffff' : C.ink, bd: on ? C.acc : '#d8d5cf' }; });
-    if (t === 'select') opts = this.HEADS.map(h => ({ label: h.name === 'None' ? 'None' : `${h.name} · ${this.fmt(h.wt)} lb`, val: h.name }));
+    if (t === 'select') opts = this.HEADS.map(h => ({ label: h.name === 'None' ? 'None' : `${h.name} · ${this.u(h.wt, 'm')}`, val: h.name }));
     return { id: q.id, label: q.label, core: !!q.core, hasHint: !!q.hint, hint: q.hint || '', ph: q.ph || '', value: v ?? '', unit, opts,
       isText: t === 'text', isArea: t === 'area', isNum: t === 'num', isDate: t === 'date', isSelect: t === 'select', isChips: t === 'single' || t === 'multi',
       basis: t === 'num' || t === 'date' ? '1 1 200px' : '1 1 100%', hasAction: !!q.action, action: q.action || '', actionLabel: q.actionLabel || '' };
@@ -1112,10 +1119,10 @@ class Component extends DCLogic {
     if (rec.none) { const best = A.evals.slice().sort((a, b) => a.peak - b.peak).reverse()[0]; const top = A.evals.reduce((m, e) => (!m || e.size > m.size ? e : m), null); rec.noneDriver = top && top.driver ? `${top.driver.label} on the largest system (${top.name}) at ${this.pct(top.driver.ratio)}` : (top && !top.freqOk ? 'frequency range' : 'see checks'); }
     if (p) {
       const st = this.stat(p.res);
-      const bars = p.checks.map(c => ({ label: c.label, txt: c.st === 'NO DATA' ? `${this.fmt(c.req)} ${c.unit} · no datasheet rating${c.ratio != null ? ' (screened vs sine)' : ''}` : `${this.fmt(c.req)} / ${this.fmt(c.lim)} ${c.unit} · ${this.pct(c.ratio)}`, w: c.ratio == null ? '0%' : Math.min(100, c.ratio * 100) + '%', col: c.ratio == null ? C.warn : this.utilCol(c.ratio, H) }));
+      const bars = p.checks.map(c => ({ label: c.label, txt: c.st === 'NO DATA' ? `${this.uq(c.req, c.unit)} · no datasheet rating${c.ratio != null ? ' (screened vs sine)' : ''}` : `${this.uq(c.req, c.unit).replace(/ (\S+)( .*)?$/, '')} / ${this.uq(c.lim, c.unit)} · ${this.pct(c.ratio)}`, w: c.ratio == null ? '0%' : Math.min(100, c.ratio * 100) + '%', col: c.ratio == null ? C.warn : this.utilCol(c.ratio, H) }));
       rec = { ...rec, tierLabel: A.pickedLabel, shaker: p.s.shaker + (p.name.includes('(fan)') ? ' (fan)' : p.name.includes('(no fan)') ? ' (no fan)' : '') + (p.name.split(' / ')[0].replace(/\s*\(.*\)/, '') !== p.s.shaker ? '' : ''), amp: p.s.amp, stLabel: st.l, stFg: st.fg, stBg: st.bg,
         driver: p.driver ? `Sized by ${p.driver.label.toLowerCase()} — ${this.pct(p.driver.ratio)} of rating (target ≤ ${this.pct(H)})` : '',
-        mass: `${this.fmt(p.m)} lb`, freq: (R.fmax ? `Test ${this.fmt(R.fmin)}–${this.fmt(R.fmax)} Hz · shaker ${this.fmt(p.s.fmin)}–${this.fmt(p.s.fmax)} Hz · ` : '') + (this.singlePhase && this.singlePhase(p.s) ? 'single-phase' : '3-phase') + ' · ' + p.leadTxt, bars, src: p.s.src + (p.s.notes ? ' · ' + p.s.notes : '') };
+        mass: `${this.u(p.m, 'm')}`, freq: (R.fmax ? `Test ${this.fmt(R.fmin)}–${this.fmt(R.fmax)} Hz · shaker ${this.fmt(p.s.fmin)}–${this.fmt(p.s.fmax)} Hz · ` : '') + (this.singlePhase && this.singlePhase(p.s) ? 'single-phase' : '3-phase') + ' · ' + p.leadTxt, bars, src: p.s.src + (p.s.notes ? ' · ' + p.s.notes : '') };
       rec.shaker = p.name.split(' / ')[0];
     }
 
@@ -1123,14 +1130,14 @@ class Component extends DCLogic {
 
     const oppV = opps.map(o => { const on = !!S.added[o.id]; const lk = this.linksFor(this.OPP_TOPIC[o.id]); return { ...o, links: lk, hasLinks: lk.length > 0, btn: on ? 'Added ✓' : 'Add to proposal', bg: on ? C.okS : '#ffffff', fg: on ? C.ok : C.acc, bd: on ? C.ok : C.acc, dot: on ? C.ok : C.acc }; });
 
-    const liveRows = [{ k: 'Payload (DUT + fixture + misc)', v: `${this.fmt(M.payload)} lb` }];
-    if (M.vHw) liveRows.push({ k: 'Head expander / barrier', v: `${this.fmt(M.vHw)} lb` });
-    if (M.horiz) liveRows.push({ k: 'Slip table', v: M.slip ? `${this.fmt(M.slip)} lb` : 'not entered' });
+    const liveRows = [{ k: 'Payload (DUT + fixture + misc)', v: `${this.u(M.payload, 'm')}` }];
+    if (M.vHw) liveRows.push({ k: 'Head expander / barrier', v: `${this.u(M.vHw, 'm')}` });
+    if (M.horiz) liveRows.push({ k: 'Slip table', v: M.slip ? `${this.u(M.slip, 'm')}` : 'not entered' });
     if (R.sineAcc) liveRows.push({ k: 'Sine', v: `${this.fmt(R.sineAcc)} g pk` });
     if (R.grms) liveRows.push({ k: 'Random', v: `${this.fmt(R.grms)} Grms` });
-    if (R.shockG) liveRows.push({ k: 'Shock', v: `${this.fmt(R.shockG)} g · ΔV ${this.fmt(R.shockVel)} in/s` });
-    if (R.disp) liveRows.push({ k: 'Stroke needed', v: `${this.fmt(R.disp)} in pk-pk` });
-    if (R.vel) liveRows.push({ k: 'Velocity needed', v: `${this.fmt(R.vel)} in/s pk` });
+    if (R.shockG) liveRows.push({ k: 'Shock', v: `${this.fmt(R.shockG)} g · ΔV ${this.u(R.shockVel, 'V')}` });
+    if (R.disp) liveRows.push({ k: 'Stroke needed', v: `${this.u(R.disp, 'L')} pk-pk` });
+    if (R.vel) liveRows.push({ k: 'Velocity needed', v: `${this.u(R.vel, 'V')} pk` });
     if (R.fmax) liveRows.push({ k: 'Frequency', v: `${this.fmt(R.fmin)}–${this.fmt(R.fmax)} Hz` });
     const lst = p ? this.stat(p.res) : null;
     const live = { rows: liveRows, hasTiers: tiers.length > 0,
@@ -1150,8 +1157,8 @@ class Component extends DCLogic {
       onHe: e => { const n = e.currentTarget.dataset.he; this.setState(s => ({ f: { ...s.f, he: s.f.he === n ? 'None' : n } })); }, showProfile: S.step === 2, showRec: last,
       noTypes: !(f.types || []).length, useSine: R.useSine, useRand: R.useRand, useShock: R.useShock,
       sineRows, psdRows, shockRows, dB: f.dB || '',
-      sineSum: R.sineAcc ? `${this.fmt(R.sineAcc)} g · ${this.fmt(R.sineVel)} in/s · ${this.fmt(R.sineDisp)} in pk-pk` : '',
-      randSum: R.grms ? `${this.fmt(R.grms)} Grms · ${this.fmt(R.rDisp)} in pk-pk` : '',
+      sineSum: R.sineAcc ? `${this.fmt(R.sineAcc)} g · ${this.u(R.sineVel, 'V')} · ${this.u(R.sineDisp, 'L')} pk-pk` : '',
+      randSum: R.grms ? `${this.fmt(R.grms)} Grms · ${this.u(R.rDisp, 'L')} pk-pk` : '',
       rec, tiers, alts, hasAlts: alts.length > 0, failCount: A.evals.length - A.cands.length,
       opps: oppV, hasOpps: oppV.length > 0, oppCount: `${Object.keys(S.added).filter(k => S.added[k] && opps.some(o => o.id === k)).length} of ${opps.length} added`,
       flags: flags.map(t => ({ t })), hasFlags: flags.length > 0, flagCount: String(flags.length),
@@ -1201,7 +1208,9 @@ class Component extends DCLogic {
       newCall: () => { if (window.confirm('Start a new call? This clears the current answers.')) { this.setState({ ...this.blank(), coach: S.coach, core: S.core }); window.scrollTo({ top: 0 }); } },
       onUnit: e => { const u = e.currentTarget.dataset.v; if (u === f.unit) return; const k = u === 'kg' ? 1 / 2.20462 : 2.20462, kl = u === 'kg' ? 25.4 : 1 / 25.4;
         const conv = (v, m) => { const n = this.num(v); return n == null ? v : String(Number((n * m).toPrecision(4))); };
-        this.setState(s => ({ f: { ...s.f, unit: u, dutWt: conv(s.f.dutWt, k), fixWt: conv(s.f.fixWt, k), accWt: conv(s.f.accWt, k), slipWt: conv(s.f.slipWt, k), foot: conv(s.f.foot, kl) } })); },
+        const kf = u === 'kg' ? 0.00444822 : 1 / 0.00444822, mult = { W: k, L: kl, F: kf };
+        this.steps(); // every num question with a W/L/F unit converts — no hand list to forget
+        this.setState(s => { const nf = { ...s.f, unit: u }; Object.values(this._qmap).forEach(q => { if (q.type === 'num' && mult[q.unit]) nf[q.id] = conv(s.f[q.id], mult[q.unit]); }); return { f: nf }; }); },
       onPick: e => this.setState({ pick: e.currentTarget.dataset.n }),
       onAdd: e => { const id = e.currentTarget.dataset.o; this.setState(s => ({ added: { ...s.added, [id]: !s.added[id] } })); },
       copySummary: () => this.copyText(text)
